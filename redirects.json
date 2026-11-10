@@ -1,12 +1,12 @@
 {
   "schema_version": "2.0.0",
   "base_url": "https://velasco-dev.github.io/links",
-  "updated_at": "2026-11-10T10:00:00Z",
+  "updated_at": "2026-11-10T17:28:45.646Z",
   "default_project": "nox",
   "security": {
     "auth_enabled": true,
-    "admin_salt": "nox_salt_2026",
-    "admin_hash": "d241f6d928459ccd197330a09842a5e00b017c04df31bd36b1639b43cbf7441f",
+    "admin_salt": "nox_salt_22ly7vh8",
+    "admin_hash": "5fe5b96057ca0213d047bd5dcb0f575f8cc5b6bf3445fa8b4c820123ecfde45c",
     "session_timeout_minutes": 60
   },
   "projects": {
@@ -29,7 +29,7 @@
       "links": [
         {
           "slug": "menu",
-          "url": "https://script.google.com/macros/s/AKfycbzBLqsY6YqLex1KzvvlBT5viV8KNmw2VlKL8kZ-Wn5_/dev",
+          "url": "https://script.google.com/macros/s/AKfycbwa5lWCVfdBqZiOtkZGWWTk9OI2wPe84NrlPlrufVk1LDNItsAV-qHym2zkEwd9ucKdmg/exec",
           "title": "Menu Digital & Pedidos en Linea",
           "description": "Consulta la carta oficial, sabores y pide al instante",
           "icon": "fa-solid fa-snowflake",
@@ -89,9 +89,9 @@
     {
       "slug": "menu",
       "project": "nox",
-      "url": "https://script.google.com/macros/s/AKfycbzBLqsY6YqLex1KzvvlBT5viV8KNmw2VlKL8kZ-Wn5_/dev",
-      "title": "Menu Digital & Web App Oficial",
-      "description": "Catalogo interactivo, sabores de granizados, cocteles y pedidos en linea",
+      "url": "https://script.google.com/macros/s/AKfycbwa5lWCVfdBqZiOtkZGWWTk9OI2wPe84NrlPlrufVk1LDNItsAV-qHym2zkEwd9ucKdmg/exec",
+      "title": "Menu Digital & Pedidos en Linea",
+      "description": "Consulta la carta oficial, sabores y pide al instante",
       "category": "comercial",
       "is_public": true,
       "is_active": true
@@ -100,8 +100,8 @@
       "slug": "ig",
       "project": "nox",
       "url": "https://www.instagram.com/noxslushnbeats/",
-      "title": "Instagram Oficial @noxslushnbeats",
-      "description": "Fotos, promociones, historias y contacto oficial de NOX Slush & Beats",
+      "title": "Instagram Oficial",
+      "description": "@noxslushnbeats - Novedades, fotos y promociones",
       "category": "social",
       "is_public": true,
       "is_active": true
