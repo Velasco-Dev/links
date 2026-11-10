@@ -1,0 +1,38 @@
+{
+  "base_url": "https://velasco-dev.github.io/links",
+  "updated_at": "2026-11-10T09:20:00Z",
+  "redirects": [
+    {
+      "slug": "menu",
+      "url": "https://script.google.com/macros/s/AKfycbzBLqsY6YqLex1KzvvlBT5viV8KNmw2VlKL8kZ-Wn5_/dev",
+      "title": "Menu Digital & Web App Oficial",
+      "description": "Catalogo interactivo, sabores de granizados, cocteles y pedidos en linea",
+      "category": "comercial",
+      "is_active": true
+    },
+    {
+      "slug": "db",
+      "url": "https://docs.google.com/spreadsheets/d/1vqtsoonbIRhnQ8bas060h27p7C-TKAIDX7cdHE8Ok5E/edit",
+      "title": "Base de Datos Google Sheets (7 Pestanas)",
+      "description": "Inventario, historial de ventas, compras y balance contable de NOX",
+      "category": "operaciones",
+      "is_active": true
+    },
+    {
+      "slug": "editor",
+      "url": "https://script.google.com/home/projects/19Jj1QYs18vnHqS9FqM41cnGebJPlyRewE035hxI8VMK1J4skK1ETXioR/edit",
+      "title": "Editor de Google Apps Script",
+      "description": "Entorno de programacion backend y logica operativa en Google Cloud",
+      "category": "desarrollo",
+      "is_active": true
+    },
+    {
+      "slug": "ig",
+      "url": "https://www.instagram.com/noxslushnbeats/",
+      "title": "Instagram Oficial @noxslushnbeats",
+      "description": "Fotos, promociones, historias y contacto oficial de NOX Slush & Beats",
+      "category": "social",
+      "is_active": true
+    }
+  ]
+}
