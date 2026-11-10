@@ -993,7 +993,7 @@
                     <i class="fa-solid fa-cloud-arrow-up me-1"></i> Subir Logo
                   </label>
                   <input type="file" id="new-proj-logo-file" accept="image/*" style="display: none;" onchange="handleLogoUpload(this, 'new-proj-logo-url', 'new-proj-logo-preview')">
-                  <input type="hidden" id="new-proj-logo-url" value="../assets/logo.jpeg">
+                  <input type="hidden" id="new-proj-logo-url" value="assets/logo.jpeg">
                 </div>
               </div>
             </div>
@@ -1289,7 +1289,7 @@
               id: "nox",
               name: "NOX SLUSH & BEATS",
               tagline: "Experiencia Sensorial y Cocteleria Cosmica.",
-              theme: { bg: "#080114", primary: "#FF007F", cyan: "#00F0FF", logo: "../assets/logo.jpeg" },
+              theme: { bg: "#080114", primary: "#FF007F", cyan: "#00F0FF", logo: "assets/logo.jpeg" },
               links: []
             }
           },
@@ -1389,6 +1389,17 @@
       }
     }
 
+    function resolveAdminLogo(logo) {
+      if (!logo) return '../assets/logo.jpeg';
+      if (logo.startsWith('http://') || logo.startsWith('https://') || logo.startsWith('data:') || logo.startsWith('//')) {
+        return logo;
+      }
+      if (logo.startsWith('../')) {
+        return logo;
+      }
+      return '../' + logo.replace(/^\.?\/?/, '');
+    }
+
     function renderProjectDropdown() {
       const sel = document.getElementById('project-select-dropdown');
       sel.innerHTML = '';
@@ -1406,11 +1417,8 @@
       document.getElementById('header-project-name').textContent = currentProj.name || 'CONSOLA DE ENLACES';
       document.getElementById('table-project-label').textContent = currentProj.name || currentProjectId;
       
-      if (currentProj.theme && currentProj.theme.logo) {
-        document.getElementById('header-logo').src = currentProj.theme.logo.startsWith('http') || currentProj.theme.logo.startsWith('../')
-          ? currentProj.theme.logo
-          : '../' + currentProj.theme.logo;
-      }
+      const currentLogo = (currentProj.theme && currentProj.theme.logo) || 'assets/logo.jpeg';
+      document.getElementById('header-logo').src = resolveAdminLogo(currentLogo);
 
       // Actualizar enlace "Ver Portal" con ruta física del proyecto
       const portalBtn = document.getElementById('btn-view-portal');
@@ -1656,13 +1664,11 @@
       document.getElementById('brand-color-bg').value = bg;
       document.getElementById('brand-color-bg-text').value = bg;
       
-      const logoVal = theme.logo || '../assets/logo.jpeg';
+      const logoVal = theme.logo || 'assets/logo.jpeg';
       document.getElementById('brand-logo-url').value = logoVal;
       const preview = document.getElementById('brand-logo-preview');
       if (preview) {
-        preview.src = logoVal.startsWith('http') || logoVal.startsWith('data:') || logoVal.startsWith('../')
-          ? logoVal
-          : '../' + logoVal;
+        preview.src = resolveAdminLogo(logoVal);
       }
     }
 
@@ -1723,7 +1729,7 @@
       const id = document.getElementById('new-proj-id').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
       const name = document.getElementById('new-proj-name').value.trim();
       const color = document.getElementById('new-proj-color').value;
-      const logoUrl = document.getElementById('new-proj-logo-url').value || '../assets/logo.jpeg';
+      const logoUrl = document.getElementById('new-proj-logo-url').value || 'assets/logo.jpeg';
 
       if (!id || !name) {
         alert('Por favor ingresa un ID y un Nombre para el proyecto.');

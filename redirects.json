@@ -94,7 +94,7 @@
         "primary": "#00f0ff",
         "cyan": "#38BDF8",
         "border": "#00f0ff40",
-        "logo": "../assets/logo.jpeg"
+        "logo": "assets/logo.jpeg"
       },
       "links": [
         {

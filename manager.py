@@ -126,8 +126,10 @@ def generate_project_portal(proj_id, proj_data, base_url):
     cyan = theme.get("cyan", "#00F0FF")
     border = theme.get("border", "rgba(255, 0, 127, 0.25)")
     logo = theme.get("logo", "assets/logo.jpeg")
-    if not logo.startswith("http") and not logo.startswith("data:") and not logo.startswith("../"):
-        logo = f"../{logo}"
+    if not logo.startswith("http") and not logo.startswith("data:"):
+        logo = logo.lstrip("/")
+        if not logo.startswith("../"):
+            logo = f"../{logo}"
 
     links = proj_data.get("links", [])
     public_links = [l for l in links if l.get("is_public", True) and l.get("is_active", True) is not False]

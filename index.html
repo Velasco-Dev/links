@@ -276,6 +276,17 @@
         const projects = data.projects || {};
         const pKeys = Object.keys(projects);
 
+        function resolveRootLogo(logo) {
+          if (!logo) return 'assets/logo.jpeg';
+          if (logo.startsWith('http://') || logo.startsWith('https://') || logo.startsWith('data:') || logo.startsWith('//')) {
+            return logo;
+          }
+          if (logo.startsWith('../')) {
+            return logo.replace(/^\.\.\//, '');
+          }
+          return logo.replace(/^\.?\/?/, '');
+        }
+
         if (pKeys.length > 0) {
           const container = document.getElementById('projects-container');
           container.innerHTML = '';
@@ -285,7 +296,7 @@
             const pName = escapeHtml(p.name || pId.toUpperCase());
             const pTagline = escapeHtml(p.tagline || 'Canales oficiales y accesos directos.');
             const pTheme = p.theme || {};
-            const pLogo = pTheme.logo || 'assets/logo.jpeg';
+            const pLogo = resolveRootLogo(pTheme.logo);
             const publicCount = (p.links || []).filter(l => l.is_public === true && l.is_active !== false).length;
 
             const a = document.createElement('a');

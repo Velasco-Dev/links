@@ -115,6 +115,24 @@ G:\Ingenieria Informatica\Git Externo\links/
 
 ## 3. Bitacora de Evolucion y Versiones
 
+### Version 2.2.2 (10 de Noviembre de 2026) - Resolucion de URIs de Logos Base64 y Normalizacion de Rutas Relativas
+
+* **Objetivo:** Resolver fallo en peticiones HTTP al cargar o guardar logotipos en formato Data URL Base64 (`data:image/png;base64,...`) en la consola administrativa y homogeneizar el enrutamiento de imagenes.
+* **Problemas Abordados:**
+  1. En `admin/index.html` linea 1410, al cambiar de proyecto o guardar branding, se concatenaba el prefijo relativo `'../'` a cualquier logo que no iniciara con `http` o `../`. Al ser un Data URL Base64 (`data:image/...`), se convertia en `'../data:image/png;base64...'`, provocando que el navegador disparara una peticion HTTP GET fallida (`GET https://velasco-dev.github.io/links/data:image/... 502 / 404`).
+  2. En `index.html` (Master Hub), si `redirects.json` contenia `../assets/logo.jpeg`, el navegador intentaba resolver la imagen un nivel arriba de `/links/`.
+* **Acciones Implementadas:**
+  - Implementacion de la funcion universal `resolveAdminLogo(logo)` en `admin/index.html` con deteccion explicita para Data URLs (`data:`), esquemas absolutos (`http://`, `https://`, `//`) y rutas relativas canónicas.
+  - Implementacion de `resolveRootLogo(logo)` en `index.html` para asegurar que las tarjetas del directorio maestro interpreten rutas tanto absolutas, relativas o Base64.
+  - Normalizacion del valor por defecto en `new-proj-logo-url` hacia la ruta canonica `assets/logo.jpeg`.
+  - Actualizacion de `manager.py` para depurar prefijos y preservar Data URLs sin alteracion.
+* **Verificacion:**
+  - Eliminacion total del intento de peticion de red hacia cadenas Base64.
+  - Sintaxis validada con Node.js en todos los archivos HTML.
+  - Verificacion de 0 emojis en todo el repositorio.
+
+---
+
 ### Version 2.2.1 (10 de Noviembre de 2026) - Parche de Estabilidad en Consola Gerencial (Cierre de Sintaxis JS)
 
 * **Objetivo:** Subsanar error de sintaxis en `admin/index.html` que bloqueaba el parseo del script principal y la funcion de desbloqueo `handleUnlock()`.
