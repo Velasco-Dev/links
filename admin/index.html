@@ -910,15 +910,15 @@
               <div class="form-group">
                 <label>Color Primario (Neón):</label>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
-                  <input type="color" id="brand-color-primary" style="width: 44px; height: 38px; border: none; border-radius: 8px; cursor: pointer;">
-                  <input type="text" id="brand-color-primary-text" class="form-control form-control-mono" onchange="document.getElementById('brand-color-primary').value = this.value">
+                  <input type="color" id="brand-color-primary" style="width: 44px; height: 38px; border: none; border-radius: 8px; cursor: pointer;" oninput="document.getElementById('brand-color-primary-text').value = this.value" onchange="document.getElementById('brand-color-primary-text').value = this.value">
+                  <input type="text" id="brand-color-primary-text" class="form-control form-control-mono" oninput="if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) document.getElementById('brand-color-primary').value = this.value" onchange="if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) document.getElementById('brand-color-primary').value = this.value">
                 </div>
               </div>
               <div class="form-group">
                 <label>Color Acento (Cian/Secundario):</label>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
-                  <input type="color" id="brand-color-cyan" style="width: 44px; height: 38px; border: none; border-radius: 8px; cursor: pointer;">
-                  <input type="text" id="brand-color-cyan-text" class="form-control form-control-mono" onchange="document.getElementById('brand-color-cyan').value = this.value">
+                  <input type="color" id="brand-color-cyan" style="width: 44px; height: 38px; border: none; border-radius: 8px; cursor: pointer;" oninput="document.getElementById('brand-color-cyan-text').value = this.value" onchange="document.getElementById('brand-color-cyan-text').value = this.value">
+                  <input type="text" id="brand-color-cyan-text" class="form-control form-control-mono" oninput="if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) document.getElementById('brand-color-cyan').value = this.value" onchange="if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) document.getElementById('brand-color-cyan').value = this.value">
                 </div>
               </div>
             </div>
@@ -927,8 +927,8 @@
               <div class="form-group">
                 <label>Color de Fondo:</label>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
-                  <input type="color" id="brand-color-bg" style="width: 44px; height: 38px; border: none; border-radius: 8px; cursor: pointer;">
-                  <input type="text" id="brand-color-bg-text" class="form-control form-control-mono" onchange="document.getElementById('brand-color-bg').value = this.value">
+                  <input type="color" id="brand-color-bg" style="width: 44px; height: 38px; border: none; border-radius: 8px; cursor: pointer;" oninput="document.getElementById('brand-color-bg-text').value = this.value" onchange="document.getElementById('brand-color-bg-text').value = this.value">
+                  <input type="text" id="brand-color-bg-text" class="form-control form-control-mono" oninput="if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) document.getElementById('brand-color-bg').value = this.value" onchange="if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) document.getElementById('brand-color-bg').value = this.value">
                 </div>
               </div>
               <div class="form-group">
@@ -1715,9 +1715,14 @@
       proj.tagline = document.getElementById('brand-project-tagline').value.trim();
       
       proj.theme = proj.theme || {};
-      proj.theme.primary = document.getElementById('brand-color-primary-text').value.trim();
-      proj.theme.cyan = document.getElementById('brand-color-cyan-text').value.trim();
-      proj.theme.bg = document.getElementById('brand-color-bg-text').value.trim();
+      const primaryVal = document.getElementById('brand-color-primary').value || document.getElementById('brand-color-primary-text').value.trim();
+      const cyanVal = document.getElementById('brand-color-cyan').value || document.getElementById('brand-color-cyan-text').value.trim();
+      const bgVal = document.getElementById('brand-color-bg').value || document.getElementById('brand-color-bg-text').value.trim();
+      
+      proj.theme.primary = primaryVal;
+      proj.theme.cyan = cyanVal;
+      proj.theme.bg = bgVal;
+      proj.theme.border = primaryVal + '40';
       proj.theme.logo = document.getElementById('brand-logo-url').value.trim();
 
       persistConfig();
@@ -2058,9 +2063,10 @@
       alertBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><div>Obteniendo metadata y enviando commit a GitHub...</div>';
 
       try {
-        // 1. Obtener SHA actual del archivo
-        const url = 'https://api.github.com/repos/Velasco-Dev/links/contents/redirects.json';
+        // 1. Obtener SHA actual del archivo sin cache
+        const url = 'https://api.github.com/repos/Velasco-Dev/links/contents/redirects.json?v=' + Date.now();
         const getRes = await fetch(url, {
+          cache: 'no-store',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/vnd.github+json'

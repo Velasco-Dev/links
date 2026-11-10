@@ -124,6 +124,14 @@
         }
 
         const theme = proj.theme || {};
+        if (theme.primary) {
+          document.documentElement.style.setProperty('--primary', theme.primary);
+          document.documentElement.style.setProperty('--border', theme.border || (theme.primary + '40'));
+        }
+        if (theme.cyan) document.documentElement.style.setProperty('--cyan', theme.cyan);
+        if (theme.bg) document.documentElement.style.setProperty('--bg', theme.bg);
+        if (theme.card) document.documentElement.style.setProperty('--card', theme.card);
+
         if (theme.logo) {
           let logoSrc = theme.logo;
           if (!logoSrc.startsWith('http') && !logoSrc.startsWith('data:') && !logoSrc.startsWith('../')) {

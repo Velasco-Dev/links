@@ -115,6 +115,24 @@ G:\Ingenieria Informatica\Git Externo\links/
 
 ## 3. Bitacora de Evolucion y Versiones
 
+### Version 2.2.4 (10 de Noviembre de 2026) - Enlace Bidireccional de Selectores de Color y Mitigacion de SHA Mismatch
+
+* **Objetivo:** Resolver la perdida de valores al seleccionar colores en la paleta grafica y blindar la sincronizacion con GitHub contra respuestas cacheadas de la API.
+* **Problemas Abordados:**
+  1. En `admin/index.html`, los `<input type="color">` no contaban con listeners `oninput`/`onchange` hacia los campos de texto correspondientes. Al seleccionar un color con el picker, el input de texto retenia el valor anterior y `handleSaveBranding()` guardaba el color previo.
+  2. `syncPortalLive()` en los portales no sincronizaba las variables CSS `--primary`, `--cyan`, `--bg` y `--border` reactivamente.
+  3. `handlePushToGitHubApi` podia recibir respuestas cacheadas de la metadata del archivo en GitHub, provocando posibles conflictos HTTP 409 al enviar el commit PUT.
+* **Acciones Implementadas:**
+  - Sincronizacion bidireccional reactiva (`oninput`/`onchange`) entre selectores `<input type="color">` y campos de texto hexadecimales.
+  - Priorizacion del valor seleccionado en `handleSaveBranding()` y generacion automatica de bordes tonales (`primary + '40'`).
+  - Incorporacion de `no-store` y parametro temporal `?v=` en la consulta de SHA contra la API de GitHub Contents.
+  - Sincronizacion de variables CSS personalizadas en `syncPortalLive()`.
+* **Verificacion:**
+  - Validacion de sintaxis 100% con Node.js.
+  - Canon Cero Emojis comprobado.
+
+---
+
 ### Version 2.2.3 (10 de Noviembre de 2026) - Hidratacion Dinamica en Tiempo Real para Portales de Marca
 
 * **Objetivo:** Garantizar que cualquier actualizacion en enlaces, iconos (ej. Instagram), descripciones, logotipos o estilos realizada desde la consola web se refleje inmediatamente en el portal del proyecto sin requerir compilacion estatica manual.
