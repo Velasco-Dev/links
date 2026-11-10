@@ -31,7 +31,7 @@ Chats/
 
 | Archivo | Modulo / Alcance | Estado | Ultima Version |
 | :--- | :--- | :--- | :--- |
-| [`Chats/Links.md`](Links.md) | Suite completa de enlaces multi-proyecto, seguridad criptografica y generador QR | Activo / En Produccion | 2.0.0 |
+| [`Chats/Links.md`](Links.md) | Suite completa de enlaces multi-proyecto, base de datos GitHub API y generador QR | Activo / En Produccion | 2.1.0 |
 
 ---
 

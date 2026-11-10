@@ -115,6 +115,28 @@ G:\Ingenieria Informatica\Git Externo\links/
 
 ## 3. Bitacora de Evolucion y Versiones
 
+### Version 2.1.0 (10 de Noviembre de 2026) - Base de Datos en Vivo (GitHub Cloud API) y Rutas Fisicas Multi-Proyecto
+
+* **Objetivo:** Resolver la persistencia en tiempo real en GitHub Pages permitiendo guardar cambios directamente desde la aplicacion web y habilitar rutas de acceso fisicas directas (`/links/nox`, `/links/<xproyecto>`).
+* **Problemas Abordados:**
+  1. Al editar un enlace desde la app desplegada, el cambio solo se guardaba en el `localStorage` del dispositivo local y no se reflejaba en el repositorio ni en produccion (debido a la naturaleza estatica de GitHub Pages).
+  2. Necesidad de rutas independientes por proyecto (`links/nox`, `links/xproyecto`) en lugar de depender exclusivamente de query parameters (`?p=slug`).
+* **Acciones Implementadas:**
+  1. **Sincronizacion en Vivo con GitHub REST API:**
+     - Integracion del cliente GitHub Contents API (`PUT /repos/Velasco-Dev/links/contents/redirects.json`) dentro de [`admin/index.html`](../admin/index.html).
+     - Almacenamiento seguro del Personal Access Token (PAT) en el navegador del administrador.
+     - Boton de cabecera "Publicar en GitHub" que realiza commits reales en la rama `main` en tiempo real sin requerir terminal.
+  2. **Rutas Fisicas de Proyectos (`/links/nox/` y `/links/<xproyecto>/`):**
+     - Actualizacion de [`manager.py`](../manager.py) para compilar no solo los slugs de redireccion sino tambien los portales fisicos de cada proyecto registrado (`nox/index.html`, `<xproyecto>/index.html`).
+     - Adaptacion del enrutador dinámico en [`404.html`](../404.html) para detectar proyectos no compilados y redirigir inmediatamente a su portal.
+     - Deteccion automatica en [`index.html`](../index.html) tanto por path `/links/<proyecto>/` como por parametro `?p=<slug>`.
+* **Verificacion:**
+  - Compilacion exitosa de `/nox/index.html` mediante `python manager.py --build`.
+  - Integracion probada de `b64` encoding UTF-8 y conexion con API de GitHub.
+  - Cero emojis preservado estrictamente en todo el repositorio.
+
+---
+
 ### Version 2.0.0 (10 de Noviembre de 2026) - Generalizacion Multi-Proyecto y Blindaje de Seguridad
 
 * **Objetivo:** Transformar la suite en un contenedor multi-proyecto generico, proteger la consola administrativa bajo barrera criptografica y segregar estrictamente los enlaces publicos de los accesos gerenciales privados.

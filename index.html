@@ -257,27 +257,46 @@
 
   <script>
     (async function initPortal() {
-      // 1. Deteccion de proyecto desde parametro URL (?p=slug)
+      // 1. Deteccion de proyecto desde parametro URL (?p=slug) o ruta física (/links/nox)
       const urlParams = new URLSearchParams(window.location.search);
       const requestedProject = urlParams.get('p');
 
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      let pathProject = null;
+      if (pathSegments.length > 0) {
+        let last = pathSegments[pathSegments.length - 1];
+        if (last.endsWith('.html')) {
+          last = pathSegments.length > 1 ? pathSegments[pathSegments.length - 2] : null;
+        }
+        if (last && last !== 'links' && last !== 'index.html') {
+          pathProject = last;
+        }
+      }
+
+      const isSubfolder = pathSegments.length > 1 && !pathSegments[pathSegments.length - 1].endsWith('.html') || (pathSegments.length > 2);
+      const prefix = isSubfolder ? '../' : './';
+
       // 2. Consulta de configuracion multi-proyecto
+      let config = null;
       try {
-        const response = await fetch('./redirects.json?v=' + Date.now());
-        if (!response.ok) return;
-        const config = await response.json();
-
-        const projectId = requestedProject || config.default_project || 'nox';
-        const project = (config.projects && config.projects[projectId]) ? config.projects[projectId] : null;
-
-        if (project) {
-          applyProjectData(project);
+        const response = await fetch(prefix + 'redirects.json?v=' + Date.now());
+        if (response.ok) {
+          config = await response.json();
         }
       } catch (e) {
         // En caso de fallo de red, se mantiene el render estatico predeterminado
       }
 
-      function applyProjectData(proj) {
+      if (!config) return;
+
+      const projectId = requestedProject || pathProject || config.default_project || 'nox';
+      const project = (config.projects && config.projects[projectId]) ? config.projects[projectId] : null;
+
+      if (project) {
+        applyProjectData(project, config.base_url || 'https://velasco-dev.github.io/links');
+      }
+
+      function applyProjectData(proj, baseUrl) {
         // Titulo y Meta
         if (proj.name) {
           document.getElementById('brand-title').textContent = proj.name;
@@ -287,7 +306,10 @@
           document.getElementById('brand-tagline').textContent = proj.tagline;
         }
         if (proj.theme && proj.theme.logo) {
-          document.getElementById('brand-logo').src = proj.theme.logo;
+          const logoSrc = proj.theme.logo.startsWith('http') || proj.theme.logo.startsWith('../')
+            ? proj.theme.logo
+            : prefix + proj.theme.logo;
+          document.getElementById('brand-logo').src = logoSrc;
         }
 
         // Aplicacion de Estetica Dinamica
@@ -311,13 +333,15 @@
 
             publicLinks.forEach(link => {
               const a = document.createElement('a');
-              a.href = link.url.startsWith('http') || link.url.startsWith('mailto:') || link.url.startsWith('tel:')
-                ? link.url
-                : (link.slug ? link.slug + '/' : link.url);
               
-              if (link.url.startsWith('http') && !link.url.includes(window.location.hostname)) {
-                a.target = '_blank';
-                a.rel = 'noopener noreferrer';
+              if (link.url.startsWith('http') || link.url.startsWith('mailto:') || link.url.startsWith('tel:')) {
+                a.href = link.url;
+                if (!link.url.includes(window.location.hostname)) {
+                  a.target = '_blank';
+                  a.rel = 'noopener noreferrer';
+                }
+              } else {
+                a.href = `${baseUrl}/${link.slug}`;
               }
 
               a.className = 'link-btn' + (link.highlight ? ' highlight' : '');

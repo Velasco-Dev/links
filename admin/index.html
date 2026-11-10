@@ -299,6 +299,16 @@
     }
     .btn-lockout:hover { background: rgba(255, 51, 102, 0.25); }
 
+    .btn-cloud-sync {
+      background: rgba(0, 255, 136, 0.12);
+      border-color: rgba(0, 255, 136, 0.35);
+      color: var(--green);
+    }
+    .btn-cloud-sync:hover {
+      background: rgba(0, 255, 136, 0.25);
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+    }
+
     .btn-theme-toggle {
       width: 38px;
       height: 38px;
@@ -683,6 +693,11 @@
             <!-- Poblado dinamicamente -->
           </select>
         </div>
+
+        <!-- Boton Publicar en GitHub en Vivo -->
+        <button id="btn-header-cloud-sync" class="btn-action-sm btn-cloud-sync" onclick="handleQuickCloudSync()" title="Guardar cambios directamente en el repositorio de GitHub">
+          <i class="fa-brands fa-github"></i> Publicar en GitHub
+        </button>
 
         <!-- Boton Ver Portal Publico -->
         <a id="btn-view-portal" href="../" target="_blank" class="btn-action-sm btn-portal-view" title="Abrir portal publico del proyecto">
@@ -1112,10 +1127,49 @@
 
     <!-- PESTAÑA 5: SINCRONIZAR & GIT -->
     <section id="tab-sync" class="tab-panel">
+      
+      <!-- Sincronizacion Directa en Tiempo Real via GitHub API -->
+      <div class="card" style="border-color: rgba(0, 255, 136, 0.35);">
+        <div class="card-header">
+          <div class="card-title" style="color: var(--green);">
+            <i class="fa-brands fa-github text-green"></i> Base de Datos en Vivo & Sincronizacion GitHub API
+          </div>
+          <span id="github-connection-badge" class="badge" style="background: rgba(148, 163, 184, 0.15); color: var(--text-dim); border: 1px solid rgba(148, 163, 184, 0.3);">
+            No Conectado
+          </span>
+        </div>
+
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.6;">
+          <strong>¿Por que no se actualizan los cambios automaticamente?</strong> GitHub Pages es un alojamiento estatico (sin backend ni base de datos activa). Cuando editas un enlace en el navegador, el cambio solo se guarda en la memoria de tu dispositivo (<code style="color: var(--cyan);">localStorage</code>).<br>
+          Para que cualquier edicion que hagas desde tu telefono o computadora se guarde de verdad en el repositorio y se publique en tiempo real sin necesidad de abrir la terminal, ingresa tu <strong>GitHub Personal Access Token (PAT)</strong> a continuacion:
+        </p>
+
+        <div class="form-group">
+          <label>GitHub Personal Access Token (con permiso de repo o contents:write):</label>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <input type="password" id="github-pat-input" class="form-control form-control-mono" placeholder="ghp_... o github_pat_..." style="flex: 1; min-width: 240px;">
+            <button type="button" class="btn-secondary" onclick="handleSaveGitHubToken()"><i class="fa-solid fa-floppy-disk me-1"></i> Guardar Token</button>
+            <button type="button" class="btn-secondary" onclick="handleTestGitHubConnection()"><i class="fa-solid fa-plug me-1"></i> Probar</button>
+          </div>
+          <small style="color: var(--text-dim); display: block; margin-top: 0.4rem;">
+            El token se guarda unicamente en el almacenamiento privado de tu navegador. Jamas se sube al repositorio ni se expone publicamente.
+          </small>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+          <button type="button" class="btn-submit" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); flex: 1;" onclick="handlePushToGitHubApi()">
+            <i class="fa-solid fa-cloud-arrow-up me-1"></i> Publicar Cambios en Vivo a GitHub (Hacer Commit Ahora)
+          </button>
+        </div>
+
+        <div id="github-sync-alert" class="alert-box" style="display: none; margin-top: 1.25rem; margin-bottom: 0;"></div>
+      </div>
+
+      <!-- Exportacion Manual y Git -->
       <div class="card">
         <div class="card-header">
           <div class="card-title">
-            <i class="fa-solid fa-code-compare text-cyan"></i> Exportacion y Publicacion en GitHub Pages
+            <i class="fa-solid fa-code-compare text-cyan"></i> Exportacion Manual y Comandos PowerShell
           </div>
           <div style="display: flex; gap: 0.5rem;">
             <button class="btn-secondary" onclick="copyRedirectsJson()"><i class="fa-solid fa-copy me-1"></i> Copiar JSON</button>
@@ -1304,6 +1358,11 @@
       renderLinksTable();
       populateQrSelectors();
       updateJsonPreview();
+      updateGitHubBadge();
+      const patInput = document.getElementById('github-pat-input');
+      if (patInput && !patInput.value) {
+        patInput.value = getStoredGitHubToken();
+      }
     }
 
     function renderProjectDropdown() {
@@ -1329,11 +1388,16 @@
           : '../' + currentProj.theme.logo;
       }
 
-      // Actualizar enlace "Ver Portal"
+      // Actualizar enlace "Ver Portal" con ruta física del proyecto
       const portalBtn = document.getElementById('btn-view-portal');
-      portalBtn.href = currentProjectId === (globalConfig.default_project || 'nox')
-        ? '../'
-        : `../?p=${currentProjectId}`;
+      portalBtn.href = `../${currentProjectId}/`;
+
+      // Actualizar indicador de URL del proyecto
+      const baseUrlDisplay = document.getElementById('base-url-display');
+      if (baseUrlDisplay) {
+        const baseUrl = globalConfig.base_url || 'https://velasco-dev.github.io/links';
+        baseUrlDisplay.textContent = `${baseUrl}/${currentProjectId}/`;
+      }
     }
 
     function handleSwitchProject(newId) {
@@ -1473,7 +1537,11 @@
       persistConfig();
       resetLinkForm();
       refreshUI();
-      showToast(`Enlace '/${slug}' guardado con exito`);
+      if (getStoredGitHubToken()) {
+        showToast(`Enlace '/${slug}' guardado. Haz clic en 'Publicar en GitHub' para subirlo.`);
+      } else {
+        showToast(`Enlace '/${slug}' guardado en navegador`);
+      }
     }
 
     function prepareEditLink(slug) {
@@ -1846,6 +1914,160 @@
       return (str || '').replace(/[&<>"']/g, function(m) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
       });
+    }
+
+    // 11. Sincronizacion en Tiempo Real con GitHub REST API
+    function getStoredGitHubToken() {
+      return localStorage.getItem('nox_github_pat') || '';
+    }
+
+    function handleSaveGitHubToken() {
+      const input = document.getElementById('github-pat-input');
+      const token = input.value.trim();
+      if (!token) {
+        alert('Por favor introduce un token valido.');
+        return;
+      }
+      localStorage.setItem('nox_github_pat', token);
+      updateGitHubBadge();
+      showToast('Token de GitHub guardado en este navegador');
+    }
+
+    async function handleTestGitHubConnection() {
+      const token = getStoredGitHubToken();
+      const alertBox = document.getElementById('github-sync-alert');
+      if (!token) {
+        alertBox.style.display = 'flex';
+        alertBox.className = 'alert-box alert-warning';
+        alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i><div>Debes guardar un token primero.</div>';
+        return;
+      }
+
+      alertBox.style.display = 'flex';
+      alertBox.className = 'alert-box alert-info';
+      alertBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><div>Verificando permisos con GitHub API...</div>';
+
+      try {
+        const res = await fetch('https://api.github.com/repos/Velasco-Dev/links/contents/redirects.json', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          alertBox.className = 'alert-box alert-success';
+          alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i><div><strong>Conexion Exitosa:</strong> Repositorio Velasco-Dev/links accesible. SHA actual: <code>${data.sha.substring(0, 7)}</code></div>`;
+          updateGitHubBadge(true);
+        } else {
+          const err = await res.json();
+          alertBox.className = 'alert-box alert-warning';
+          alertBox.innerHTML = `<i class="fa-solid fa-circle-xmark"></i><div>Error de autorizacion: ${escapeHtml(err.message || 'Token invalido o sin permisos')}</div>`;
+          updateGitHubBadge(false);
+        }
+      } catch (e) {
+        alertBox.className = 'alert-box alert-warning';
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-xmark"></i><div>Fallo de red al conectar con GitHub API: ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    async function handlePushToGitHubApi(commitMessage = 'Actualizar redirects.json desde Consola Gerencial') {
+      const token = getStoredGitHubToken();
+      if (!token) {
+        switchTab('tab-sync', document.querySelectorAll('.tab-btn')[4]);
+        alert('Para publicar cambios en tiempo real a GitHub, primero ingresa tu Personal Access Token (PAT) en la pestaña Sincronizar & Git.');
+        document.getElementById('github-pat-input').focus();
+        return;
+      }
+
+      const alertBox = document.getElementById('github-sync-alert');
+      alertBox.style.display = 'flex';
+      alertBox.className = 'alert-box alert-info';
+      alertBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><div>Obteniendo metadata y enviando commit a GitHub...</div>';
+
+      try {
+        // 1. Obtener SHA actual del archivo
+        const url = 'https://api.github.com/repos/Velasco-Dev/links/contents/redirects.json';
+        const getRes = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json'
+          }
+        });
+
+        if (!getRes.ok) {
+          throw new Error('No se pudo verificar el archivo en GitHub. Verifica tu token y permisos.');
+        }
+
+        const getData = await getRes.json();
+        const currentSha = getData.sha;
+
+        // 2. Codificar JSON a Base64 con soporte UTF-8
+        syncGlobalRedirectsList();
+        persistConfig();
+        const jsonStr = JSON.stringify(globalConfig, null, 2);
+        const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+
+        // 3. Enviar commit PUT
+        const putRes = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: commitMessage,
+            content: b64,
+            sha: currentSha,
+            branch: 'main'
+          })
+        });
+
+        if (!putRes.ok) {
+          const errData = await putRes.json();
+          throw new Error(errData.message || 'Error al enviar commit a GitHub');
+        }
+
+        const putData = await putRes.json();
+        const newSha = (putData.commit && putData.commit.sha) ? putData.commit.sha.substring(0, 7) : 'OK';
+
+        alertBox.className = 'alert-box alert-success';
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i><div><strong>Publicado con Exito en GitHub:</strong> Commit <code>${newSha}</code> registrado en la rama <code>main</code>. GitHub Pages desplegara la actualizacion en instantes.</div>`;
+        showToast('Guardado y publicado en GitHub en tiempo real');
+        updateGitHubBadge(true);
+      } catch (e) {
+        alertBox.className = 'alert-box alert-warning';
+        alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><div>Fallo al sincronizar: ${escapeHtml(e.message)}</div>`;
+        showToast('Error al publicar en GitHub');
+      }
+    }
+
+    function handleQuickCloudSync() {
+      handlePushToGitHubApi('Actualizar enlaces y configuracion desde Consola Gerencial');
+    }
+
+    function updateGitHubBadge(isConnected) {
+      const badge = document.getElementById('github-connection-badge');
+      const token = getStoredGitHubToken();
+      if (!badge) return;
+
+      if (!token) {
+        badge.textContent = 'Token No Configurado';
+        badge.style.background = 'rgba(148, 163, 184, 0.15)';
+        badge.style.color = 'var(--text-dim)';
+        badge.style.borderColor = 'rgba(148, 163, 184, 0.3)';
+      } else if (isConnected === true) {
+        badge.textContent = 'Conectado a GitHub';
+        badge.style.background = 'rgba(0, 255, 136, 0.15)';
+        badge.style.color = 'var(--green)';
+        badge.style.borderColor = 'rgba(0, 255, 136, 0.4)';
+      } else {
+        badge.textContent = 'Token Guardado';
+        badge.style.background = 'rgba(0, 240, 255, 0.15)';
+        badge.style.color = 'var(--cyan)';
+        badge.style.borderColor = 'rgba(0, 240, 255, 0.3)';
+      }
     }
   </script>
 

@@ -108,26 +108,178 @@ def generate_folder_redirect(slug, target_url, title):
     return index_file
 
 
+def generate_project_portal(proj_id, proj_data, base_url):
+    if proj_id == "admin":
+        return BASE_DIR / "admin" / "index.html"
+
+    folder = BASE_DIR / proj_id
+    folder.mkdir(parents=True, exist_ok=True)
+    index_file = folder / "index.html"
+
+    name = proj_data.get("name", proj_id.upper())
+    tagline = proj_data.get("tagline", "")
+    theme = proj_data.get("theme", {})
+    bg = theme.get("bg", "#080114")
+    card = theme.get("card", "rgba(18, 7, 43, 0.85)")
+    primary = theme.get("primary", "#FF007F")
+    cyan = theme.get("cyan", "#00F0FF")
+    border = theme.get("border", "rgba(255, 0, 127, 0.25)")
+    logo = theme.get("logo", "assets/logo.jpeg")
+    if not logo.startswith("http") and not logo.startswith("../"):
+        logo = f"../{logo}"
+
+    links = proj_data.get("links", [])
+    public_links = [l for l in links if l.get("is_public", True) and l.get("is_active", True) is not False]
+
+    buttons_html = ""
+    for l in public_links:
+        slug = l.get("slug", "")
+        url = l.get("url", "")
+        title = l.get("title", slug)
+        desc = l.get("description", "")
+        icon = l.get("icon", "fa-solid fa-link")
+        highlight = l.get("highlight", False)
+        
+        target_href = url if (url.startswith("http") or url.startswith("mailto:") or url.startswith("tel:")) else f"../{slug}/"
+        target_attr = 'target="_blank" rel="noopener noreferrer"' if url.startswith("http") else ''
+        hl_class = " highlight" if highlight else ""
+        icon_style = '' if highlight else 'style="color: var(--cyan);"'
+
+        buttons_html += f"""
+      <a href="{target_href}" {target_attr} class="link-btn{hl_class}">
+        <div class="link-icon" {icon_style}><i class="{icon}"></i></div>
+        <div class="link-content">
+          <div class="link-title">{title}</div>
+          <div class="link-desc">{desc}</div>
+        </div>
+        <div class="link-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+      </a>
+"""
+
+    html = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{name} | Enlaces Oficiales</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {{
+      --bg: {bg};
+      --card: {card};
+      --primary: {primary};
+      --cyan: {cyan};
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: {border};
+    }}
+    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    body {{
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(255, 0, 127, 0.15) 0%, transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.15) 0%, transparent 45%);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1.25rem;
+    }}
+    .portal-card {{ width: 100%; max-width: 480px; text-align: center; }}
+    .brand-logo-frame {{
+      width: 110px; height: 110px; margin: 0 auto 1.5rem auto; border-radius: 50%; padding: 4px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--cyan) 100%);
+      box-shadow: 0 0 25px rgba(255, 0, 127, 0.4); display: flex; align-items: center; justify-content: center;
+    }}
+    .brand-logo-frame img {{ width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #080114; }}
+    h1 {{
+      font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; letter-spacing: 2px;
+      background: linear-gradient(135deg, #FFF 20%, var(--cyan) 70%, var(--primary) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;
+    }}
+    .tagline {{ font-size: 0.95rem; color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5; white-space: pre-line; }}
+    .links-list {{ display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2.5rem; }}
+    .link-btn {{
+      display: flex; align-items: center; padding: 1rem 1.25rem; background: var(--card);
+      border: 1.5px solid var(--border); border-radius: 16px; color: var(--text); text-decoration: none;
+      transition: all 0.25s ease; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px);
+    }}
+    .link-btn:hover {{ transform: translateY(-2px); border-color: var(--cyan); box-shadow: 0 10px 28px rgba(0, 240, 255, 0.25); }}
+    .link-btn.highlight {{
+      border-color: var(--primary);
+      background: linear-gradient(135deg, rgba(255, 0, 127, 0.18) 0%, rgba(18, 7, 43, 0.85) 100%);
+    }}
+    .link-icon {{
+      width: 44px; height: 44px; border-radius: 12px; background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0; margin-right: 1rem;
+    }}
+    .link-content {{ text-align: left; flex: 1; }}
+    .link-title {{ font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 0.2rem; }}
+    .link-desc {{ font-size: 0.8rem; color: var(--text-muted); }}
+    .link-arrow {{ color: var(--cyan); font-size: 0.95rem; opacity: 0.7; }}
+    footer {{ font-size: 0.82rem; color: var(--text-muted); border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 1.5rem; }}
+  </style>
+</head>
+<body>
+  <div class="portal-card">
+    <div class="brand-logo-frame">
+      <img src="{logo}" alt="Logo de Marca" onerror="this.src='https://via.placeholder.com/150/12072b/00f0ff?text={proj_id}'">
+    </div>
+    <h1>{name}</h1>
+    <p class="tagline">{tagline}</p>
+    <div class="links-list">
+      {buttons_html}
+    </div>
+    <footer>
+      <span>{name} &copy; 2026 | Canales Oficiales</span>
+    </footer>
+  </div>
+</body>
+</html>
+"""
+    with open(index_file, "w", encoding="utf-8") as f:
+        f.write(html)
+    return index_file
+
+
 def build_all_redirects():
     data = load_redirects_data()
+    base_url = data.get("base_url", "https://velasco-dev.github.io/links")
     redirects = data.get("redirects", [])
-    count = 0
-    print(f"\n{Fore.CYAN}Compilando carpetas de redireccion estatica para GitHub Pages...{Style.RESET_ALL}")
+    projects = data.get("projects", {})
+    count_slugs = 0
+    count_projects = 0
+
+    print(f"\n{Fore.CYAN}Compilando portales de proyectos y carpetas de redireccion...{Style.RESET_ALL}")
+
+    # 1. Compilar portales fisicos para cada proyecto registrado (ej. /nox/index.html)
+    for p_id, p_data in projects.items():
+        if p_id != "admin":
+            generate_project_portal(p_id, p_data, base_url)
+            print(f"  [+] Portal de Proyecto compilado: /{p_id}/index.html ({p_data.get('name', p_id)})")
+            count_projects += 1
     
-    # Extraer slugs unicos
+    # 2. Extraer y compilar slugs unicos de redireccion
     seen = set()
     for item in redirects:
         slug = item.get("slug")
         url = item.get("url")
         title = item.get("title", slug)
-        if slug and url and slug not in seen and slug != "admin":
+        if slug and url and slug not in seen and slug != "admin" and slug not in projects:
             generate_folder_redirect(slug, url, title)
             is_pub = "Publico" if item.get("is_public", True) else "Privado"
-            print(f"  [+] Generado: /{slug}/index.html [{is_pub}] -> {url}")
+            print(f"  [+] Redireccion compilada: /{slug}/index.html [{is_pub}] -> {url}")
             seen.add(slug)
-            count += 1
+            count_slugs += 1
 
-    print(f"{Fore.GREEN}[OK] Se compilaron exitosamente {count} carpetas de redireccion.{Style.RESET_ALL}\n")
+    print(f"{Fore.GREEN}[OK] Se compilaron {count_projects} portales de proyecto y {count_slugs} rutas de redireccion.{Style.RESET_ALL}\n")
 
 
 def generate_qr(text, filename, style="nox_neon"):

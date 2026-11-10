@@ -140,6 +140,13 @@
         const res = await fetch('./redirects.json?v=' + Date.now());
         if (res.ok) {
           const data = await res.json();
+
+          // Si el slug coincide con un proyecto registrado (ej. 'nox', 'xproyecto')
+          if (data.projects && data.projects[slug]) {
+            window.location.replace('./?p=' + slug);
+            return;
+          }
+
           const match = (data.redirects || []).find(r => r.slug.toLowerCase() === slug && r.is_active !== false);
           if (match && match.url) {
             window.location.replace(match.url);
