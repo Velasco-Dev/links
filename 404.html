@@ -106,39 +106,27 @@
 
   <script>
     (async function resolveRedirect() {
-      // 1. Mapeo instantaneo de emergencia en caso de retraso en fetch
-      const FALLBACK_REDIRECTS = {
-        'menu': 'https://script.google.com/macros/s/AKfycbzBLqsY6YqLex1KzvvlBT5viV8KNmw2VlKL8kZ-Wn5_/dev',
-        'db': 'https://docs.google.com/spreadsheets/d/1vqtsoonbIRhnQ8bas060h27p7C-TKAIDX7cdHE8Ok5E/edit',
-        'editor': 'https://script.google.com/home/projects/19Jj1QYs18vnHqS9FqM41cnGebJPlyRewE035hxI8VMK1J4skK1ETXioR/edit',
-        'ig': 'https://www.instagram.com/noxslushnbeats/'
-      };
-
-      // 2. Extraer segmentos de ruta relativos a la aplicacion
+      // 1. Extraer segmentos de ruta relativos a la aplicacion y base URL
       const allSegments = window.location.pathname.split('/').filter(Boolean);
       const repoIdx = allSegments.indexOf('links');
+      const basePath = repoIdx !== -1 ? '/' + allSegments.slice(0, repoIdx + 1).join('/') + '/' : '/';
       const relSegments = repoIdx !== -1 ? allSegments.slice(repoIdx + 1) : allSegments;
       const cleanSegments = relSegments.filter(s => s !== 'index.html' && s !== '404.html').map(s => s.toLowerCase());
 
       if (cleanSegments.length === 0) {
-        window.location.replace('./');
+        window.location.replace(basePath);
         return;
       }
 
       if (cleanSegments[0] === 'admin') {
-        window.location.replace('./admin/');
+        window.location.replace(basePath + 'admin/');
         return;
       }
 
-      // Si coincide con fallback basico
-      if (cleanSegments.length === 1 && FALLBACK_REDIRECTS[cleanSegments[0]]) {
-        window.location.replace(FALLBACK_REDIRECTS[cleanSegments[0]]);
-        return;
-      }
-
-      // 3. Consultar archivo redirects.json dinamico
+      // 2. Consultar archivo redirects.json dinamico con ruta absoluta
       try {
-        const res = await fetch('./redirects.json?v=' + Date.now());
+        const fetchUrl = basePath + 'redirects.json?v=' + Date.now();
+        const res = await fetch(fetchUrl);
         if (res.ok) {
           const data = await res.json();
           const projects = data.projects || {};
@@ -149,7 +137,7 @@
             const linkSlug = cleanSegments[1];
             if (projects[pId]) {
               const pLinks = projects[pId].links || [];
-              const matchLink = pLinks.find(l => l.slug.toLowerCase() === linkSlug && l.is_active !== false);
+              const matchLink = pLinks.find(l => l.slug && l.slug.toLowerCase() === linkSlug && l.is_active !== false);
               if (matchLink && matchLink.url) {
                 window.location.replace(matchLink.url);
                 return;
@@ -159,13 +147,13 @@
 
           // Caso B: Ruta de proyecto directo: /links/<project>/
           if (cleanSegments.length === 1 && projects[cleanSegments[0]]) {
-            window.location.replace('./' + cleanSegments[0] + '/');
+            window.location.replace(basePath + cleanSegments[0] + '/');
             return;
           }
 
           // Caso C: Ruta plana o slug directo: /links/<slug>
           const singleSlug = cleanSegments[cleanSegments.length - 1];
-          const match = (data.redirects || []).find(r => r.slug.toLowerCase() === singleSlug && r.is_active !== false);
+          const match = (data.redirects || []).find(r => r.slug && r.slug.toLowerCase() === singleSlug && r.is_active !== false);
           if (match && match.url) {
             window.location.replace(match.url);
             return;
@@ -175,11 +163,34 @@
         console.error('Error al resolver redirects.json:', e);
       }
 
+      // 3. Fallback instantaneo de emergencia si falla la red
+      const FALLBACK_REDIRECTS = {
+        'menu': 'https://script.google.com/macros/s/AKfycbwa5lWCVfdBqZiOtkZGWWTk9OI2wPe84NrlPlrufVk1LDNItsAV-qHym2zkEwd9ucKdmg/exec',
+        'db': 'https://docs.google.com/spreadsheets/d/1vqtsoonbIRhnQ8bas060h27p7C-TKAIDX7cdHE8Ok5E/edit',
+        'editor': 'https://script.google.com/home/projects/19Jj1QYs18vnHqS9FqM41cnGebJPlyRewE035hxI8VMK1J4skK1ETXioR/edit'
+      };
+
+      if (cleanSegments.length === 1 && FALLBACK_REDIRECTS[cleanSegments[0]]) {
+        window.location.replace(FALLBACK_REDIRECTS[cleanSegments[0]]);
+        return;
+      }
+
       // 4. Si no se encuentra el enlace
+      const requestedSlug = cleanSegments.join('/');
       document.getElementById('loading-spinner').style.display = 'none';
       document.getElementById('status-title').textContent = 'Enlace No Encontrado';
-      document.getElementById('status-desc').innerHTML = 'El alias <span class="badge-slug">/' + slug + '</span> no existe o ha sido desactivado en la plataforma.';
-      document.getElementById('btn-portal').style.display = 'inline-flex';
+      document.getElementById('status-desc').innerHTML = 'El alias <span class="badge-slug">/' + requestedSlug + '</span> no existe o ha sido desactivado en la plataforma.';
+      const btnPortal = document.getElementById('btn-portal');
+      if (btnPortal) {
+        if (cleanSegments.length >= 2) {
+          btnPortal.href = basePath + cleanSegments[0] + '/';
+          btnPortal.innerHTML = '<i class="fa-solid fa-house"></i> Ir al Portal de ' + cleanSegments[0].toUpperCase();
+        } else {
+          btnPortal.href = basePath;
+          btnPortal.innerHTML = '<i class="fa-solid fa-house"></i> Ir al Portal Principal';
+        }
+        btnPortal.style.display = 'inline-flex';
+      }
     })();
   </script>
 </body>
