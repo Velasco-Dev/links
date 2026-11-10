@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NOX Slush & Beats | Enlaces Oficiales</title>
+  <title id="meta-title">NOX Slush & Beats | Enlaces Oficiales</title>
   
   <!-- Tipografias: Orbitron y Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +13,7 @@
   <!-- FontAwesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <style>
+  <style id="theme-styles">
     :root {
       --bg: #080114;
       --card: rgba(18, 7, 43, 0.85);
@@ -41,6 +41,7 @@
       align-items: center;
       justify-content: center;
       padding: 2.5rem 1.25rem;
+      transition: background 0.3s ease;
     }
 
     .portal-card {
@@ -60,6 +61,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
+      user-select: none;
     }
 
     .brand-logo-frame img {
@@ -86,6 +89,7 @@
       color: var(--text-muted);
       margin-bottom: 2rem;
       line-height: 1.5;
+      white-space: pre-line;
     }
 
     .links-list {
@@ -178,26 +182,21 @@
     }
 
     footer {
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       color: var(--text-muted);
       border-top: 1px solid rgba(255, 255, 255, 0.08);
       padding-top: 1.5rem;
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      flex-wrap: wrap;
       gap: 0.5rem;
     }
 
-    footer a {
-      color: var(--cyan);
-      text-decoration: none;
-      font-weight: 600;
-      transition: color 0.2s ease;
-    }
-
-    footer a:hover {
-      color: var(--primary);
+    .brand-submark {
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      opacity: 0.75;
     }
   </style>
 </head>
@@ -206,18 +205,18 @@
   <div class="portal-card">
     
     <!-- Logo Oficial de Marca -->
-    <div class="brand-logo-frame">
-      <img src="assets/logo.jpeg" alt="NOX Slush and Beats Logo" onerror="this.src='https://via.placeholder.com/150/12072b/00f0ff?text=NOX'">
+    <div class="brand-logo-frame" id="logo-trigger" title="Canales Oficiales">
+      <img id="brand-logo" src="assets/logo.jpeg" alt="Logo de Marca" onerror="this.src='https://via.placeholder.com/150/12072b/00f0ff?text=NOX'">
     </div>
 
     <!-- Titulo y Descripcion -->
-    <h1>NOX SLUSH & BEATS</h1>
-    <p class="tagline">
-      Experiencia Sensorial y Cocteleria Cosmica.<br>
+    <h1 id="brand-title">NOX SLUSH & BEATS</h1>
+    <p class="tagline" id="brand-tagline">
+      Experiencia Sensorial y Cocteleria Cosmica.
       Granizados Artesanales, Obleas Gourmet y Bebidas Signature.
     </p>
 
-    <!-- Lista de Enlaces Oficiales -->
+    <!-- Lista de Enlaces Oficiales (Exclusivamente Publicos) -->
     <div class="links-list" id="links-container">
       
       <a href="menu/" class="link-btn highlight">
@@ -247,33 +246,127 @@
         <div class="link-arrow"><i class="fa-solid fa-chevron-right"></i></div>
       </a>
 
-      <a href="db/" class="link-btn">
-        <div class="link-icon" style="color: #00FF88;"><i class="fa-solid fa-table"></i></div>
-        <div class="link-content">
-          <div class="link-title">Base de Datos Central (Sheets)</div>
-          <div class="link-desc">Acceso exclusivo a inventario, ventas y auditoria</div>
-        </div>
-        <div class="link-arrow"><i class="fa-solid fa-chevron-right"></i></div>
-      </a>
-
-      <a href="editor/" class="link-btn">
-        <div class="link-icon" style="color: #FFE600;"><i class="fa-solid fa-code"></i></div>
-        <div class="link-content">
-          <div class="link-title">Editor Google Apps Script</div>
-          <div class="link-desc">Entorno de desarrollo y logica cloud de NOX</div>
-        </div>
-        <div class="link-arrow"><i class="fa-solid fa-chevron-right"></i></div>
-      </a>
-
     </div>
 
-    <!-- Pie de Pagina -->
+    <!-- Pie de Pagina Publico (Sin enlaces administrativos expuestos) -->
     <footer>
-      <span>NOX Suite &copy; 2026</span>
-      <a href="admin.html"><i class="fa-solid fa-gear me-1"></i> Panel de Gestion & QR</a>
+      <span class="brand-submark" id="footer-text">NOX Suite &copy; 2026 | Canales Oficiales</span>
     </footer>
 
   </div>
+
+  <script>
+    (async function initPortal() {
+      // 1. Deteccion de proyecto desde parametro URL (?p=slug)
+      const urlParams = new URLSearchParams(window.location.search);
+      const requestedProject = urlParams.get('p');
+
+      // 2. Consulta de configuracion multi-proyecto
+      try {
+        const response = await fetch('./redirects.json?v=' + Date.now());
+        if (!response.ok) return;
+        const config = await response.json();
+
+        const projectId = requestedProject || config.default_project || 'nox';
+        const project = (config.projects && config.projects[projectId]) ? config.projects[projectId] : null;
+
+        if (project) {
+          applyProjectData(project);
+        }
+      } catch (e) {
+        // En caso de fallo de red, se mantiene el render estatico predeterminado
+      }
+
+      function applyProjectData(proj) {
+        // Titulo y Meta
+        if (proj.name) {
+          document.getElementById('brand-title').textContent = proj.name;
+          document.getElementById('meta-title').textContent = proj.name + ' | Enlaces Oficiales';
+        }
+        if (proj.tagline) {
+          document.getElementById('brand-tagline').textContent = proj.tagline;
+        }
+        if (proj.theme && proj.theme.logo) {
+          document.getElementById('brand-logo').src = proj.theme.logo;
+        }
+
+        // Aplicacion de Estetica Dinamica
+        if (proj.theme) {
+          const root = document.documentElement;
+          if (proj.theme.bg) root.style.setProperty('--bg', proj.theme.bg);
+          if (proj.theme.card) root.style.setProperty('--card', proj.theme.card);
+          if (proj.theme.primary) root.style.setProperty('--primary', proj.theme.primary);
+          if (proj.theme.cyan) root.style.setProperty('--cyan', proj.theme.cyan);
+          if (proj.theme.border) root.style.setProperty('--border', proj.theme.border);
+        }
+
+        // Renderizado reactivo de enlaces publicos
+        if (Array.isArray(proj.links)) {
+          // Filtrado estricto: Unicamente enlaces publicos y activos
+          const publicLinks = proj.links.filter(l => l.is_public === true && l.is_active !== false);
+
+          if (publicLinks.length > 0) {
+            const container = document.getElementById('links-container');
+            container.innerHTML = '';
+
+            publicLinks.forEach(link => {
+              const a = document.createElement('a');
+              a.href = link.url.startsWith('http') || link.url.startsWith('mailto:') || link.url.startsWith('tel:')
+                ? link.url
+                : (link.slug ? link.slug + '/' : link.url);
+              
+              if (link.url.startsWith('http') && !link.url.includes(window.location.hostname)) {
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+              }
+
+              a.className = 'link-btn' + (link.highlight ? ' highlight' : '');
+
+              const iconClass = link.icon || 'fa-solid fa-link';
+              const iconStyle = link.highlight ? '' : 'style="color: var(--cyan);"';
+
+              a.innerHTML = `
+                <div class="link-icon" ${iconStyle}><i class="${iconClass}"></i></div>
+                <div class="link-content">
+                  <div class="link-title">${escapeHtml(link.title || link.slug)}</div>
+                  <div class="link-desc">${escapeHtml(link.description || '')}</div>
+                </div>
+                <div class="link-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+              `;
+              container.appendChild(a);
+            });
+          }
+        }
+
+        // Actualizar pie de pagina
+        const footerSpan = document.getElementById('footer-text');
+        if (footerSpan && proj.name) {
+          footerSpan.textContent = `${proj.name} \u00A9 2026 | Canales Oficiales`;
+        }
+      }
+
+      function escapeHtml(str) {
+        return (str || '').replace(/[&<>"']/g, function(m) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+        });
+      }
+
+      // Atajo oculto de acceso de propietario: 5 toques rapidos al logo
+      let logoClickCount = 0;
+      let clickTimer = null;
+      const logoEl = document.getElementById('logo-trigger');
+      if (logoEl) {
+        logoEl.addEventListener('click', () => {
+          logoClickCount++;
+          clearTimeout(clickTimer);
+          if (logoClickCount >= 5) {
+            window.location.href = 'admin/';
+          }
+          clickTimer = setTimeout(() => { logoClickCount = 0; }, 1500);
+        });
+      }
+    })();
+  </script>
 
 </body>
 </html>

@@ -1,37 +1,139 @@
 {
+  "schema_version": "2.0.0",
   "base_url": "https://velasco-dev.github.io/links",
-  "updated_at": "2026-11-10T09:20:00Z",
+  "updated_at": "2026-11-10T10:00:00Z",
+  "default_project": "nox",
+  "security": {
+    "auth_enabled": true,
+    "admin_salt": "nox_salt_2026",
+    "admin_hash": "d241f6d928459ccd197330a09842a5e00b017c04df31bd36b1639b43cbf7441f",
+    "session_timeout_minutes": 60
+  },
+  "projects": {
+    "nox": {
+      "id": "nox",
+      "name": "NOX SLUSH & BEATS",
+      "tagline": "Experiencia Sensorial y Cocteleria Cosmica.\nGranizados Artesanales, Obleas Gourmet y Bebidas Signature.",
+      "theme": {
+        "bg": "#080114",
+        "card": "rgba(18, 7, 43, 0.85)",
+        "primary": "#FF007F",
+        "cyan": "#00F0FF",
+        "green": "#00FF88",
+        "gold": "#FFE600",
+        "border": "rgba(255, 0, 127, 0.25)",
+        "font_title": "Orbitron",
+        "font_body": "Outfit",
+        "logo": "assets/logo.jpeg"
+      },
+      "links": [
+        {
+          "slug": "menu",
+          "url": "https://script.google.com/macros/s/AKfycbzBLqsY6YqLex1KzvvlBT5viV8KNmw2VlKL8kZ-Wn5_/dev",
+          "title": "Menu Digital & Pedidos en Linea",
+          "description": "Consulta la carta oficial, sabores y pide al instante",
+          "icon": "fa-solid fa-snowflake",
+          "category": "comercial",
+          "is_public": true,
+          "highlight": true,
+          "is_active": true
+        },
+        {
+          "slug": "ig",
+          "url": "https://www.instagram.com/noxslushnbeats/",
+          "title": "Instagram Oficial",
+          "description": "@noxslushnbeats - Novedades, fotos y promociones",
+          "icon": "fa-brands fa-instagram",
+          "category": "social",
+          "is_public": true,
+          "highlight": false,
+          "is_active": true
+        },
+        {
+          "slug": "wa",
+          "url": "https://wa.me/?text=Hola%20NOX,%20quiero%20cotizar%20un%20evento%20o%20hacer%20un%20pedido",
+          "title": "WhatsApp & Eventos",
+          "description": "Cotizaciones de barras moviles y atencion directa (Canal en configuracion)",
+          "icon": "fa-brands fa-whatsapp",
+          "category": "comercial",
+          "is_public": true,
+          "highlight": false,
+          "is_active": false
+        },
+        {
+          "slug": "db",
+          "url": "https://docs.google.com/spreadsheets/d/1vqtsoonbIRhnQ8bas060h27p7C-TKAIDX7cdHE8Ok5E/edit",
+          "title": "Base de Datos Google Sheets (7 Pestanas)",
+          "description": "Inventario, historial de ventas, compras y balance contable de NOX",
+          "icon": "fa-solid fa-table",
+          "category": "operaciones",
+          "is_public": false,
+          "highlight": false,
+          "is_active": true
+        },
+        {
+          "slug": "editor",
+          "url": "https://script.google.com/home/projects/19Jj1QYs18vnHqS9FqM41cnGebJPlyRewE035hxI8VMK1J4skK1ETXioR/edit",
+          "title": "Editor de Google Apps Script",
+          "description": "Entorno de programacion backend y logica operativa en Google Cloud",
+          "icon": "fa-solid fa-code",
+          "category": "desarrollo",
+          "is_public": false,
+          "highlight": false,
+          "is_active": true
+        }
+      ]
+    }
+  },
   "redirects": [
     {
       "slug": "menu",
+      "project": "nox",
       "url": "https://script.google.com/macros/s/AKfycbzBLqsY6YqLex1KzvvlBT5viV8KNmw2VlKL8kZ-Wn5_/dev",
       "title": "Menu Digital & Web App Oficial",
       "description": "Catalogo interactivo, sabores de granizados, cocteles y pedidos en linea",
       "category": "comercial",
-      "is_active": true
-    },
-    {
-      "slug": "db",
-      "url": "https://docs.google.com/spreadsheets/d/1vqtsoonbIRhnQ8bas060h27p7C-TKAIDX7cdHE8Ok5E/edit",
-      "title": "Base de Datos Google Sheets (7 Pestanas)",
-      "description": "Inventario, historial de ventas, compras y balance contable de NOX",
-      "category": "operaciones",
-      "is_active": true
-    },
-    {
-      "slug": "editor",
-      "url": "https://script.google.com/home/projects/19Jj1QYs18vnHqS9FqM41cnGebJPlyRewE035hxI8VMK1J4skK1ETXioR/edit",
-      "title": "Editor de Google Apps Script",
-      "description": "Entorno de programacion backend y logica operativa en Google Cloud",
-      "category": "desarrollo",
+      "is_public": true,
       "is_active": true
     },
     {
       "slug": "ig",
+      "project": "nox",
       "url": "https://www.instagram.com/noxslushnbeats/",
       "title": "Instagram Oficial @noxslushnbeats",
       "description": "Fotos, promociones, historias y contacto oficial de NOX Slush & Beats",
       "category": "social",
+      "is_public": true,
+      "is_active": true
+    },
+    {
+      "slug": "wa",
+      "project": "nox",
+      "url": "https://wa.me/?text=Hola%20NOX,%20quiero%20cotizar%20un%20evento%20o%20hacer%20un%20pedido",
+      "title": "WhatsApp & Eventos",
+      "description": "Cotizaciones de barras moviles y atencion directa (Canal en configuracion)",
+      "category": "comercial",
+      "is_public": true,
+      "is_active": false
+    },
+    {
+      "slug": "db",
+      "project": "nox",
+      "url": "https://docs.google.com/spreadsheets/d/1vqtsoonbIRhnQ8bas060h27p7C-TKAIDX7cdHE8Ok5E/edit",
+      "title": "Base de Datos Google Sheets (7 Pestanas)",
+      "description": "Inventario, historial de ventas, compras y balance contable de NOX",
+      "category": "operaciones",
+      "is_public": false,
+      "is_active": true
+    },
+    {
+      "slug": "editor",
+      "project": "nox",
+      "url": "https://script.google.com/home/projects/19Jj1QYs18vnHqS9FqM41cnGebJPlyRewE035hxI8VMK1J4skK1ETXioR/edit",
+      "title": "Editor de Google Apps Script",
+      "description": "Entorno de programacion backend y logica operativa en Google Cloud",
+      "category": "desarrollo",
+      "is_public": false,
       "is_active": true
     }
   ]

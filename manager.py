@@ -5,7 +5,7 @@ PROYECTO: NOX Links Suite
 REPOSITORIO: https://github.com/Velasco-Dev/links
 ARCHIVO: manager.py
 DESCRIPCION: Asistente CLI para compilar redirecciones estaticas para GitHub Pages,
-             gestionar enlaces en redirects.json y generar codigos QR en alta definicion.
+             gestionar enlaces multi-proyecto en redirects.json y generar codigos QR.
 ================================================================================
 """
 
@@ -50,7 +50,13 @@ except ImportError:
 
 def load_redirects_data():
     if not REDIRECTS_JSON.exists():
-        return {"base_url": "https://velasco-dev.github.io/links", "redirects": []}
+        return {
+            "schema_version": "2.0.0",
+            "base_url": "https://velasco-dev.github.io/links",
+            "default_project": "nox",
+            "projects": {},
+            "redirects": []
+        }
     with open(REDIRECTS_JSON, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -61,6 +67,10 @@ def save_redirects_data(data):
 
 
 def generate_folder_redirect(slug, target_url, title):
+    # Evitar sobreescribir la carpeta administrativa si se llama 'admin'
+    if slug == "admin":
+        return BASE_DIR / "admin" / "index.html"
+
     folder = BASE_DIR / slug
     folder.mkdir(parents=True, exist_ok=True)
     index_file = folder / "index.html"
@@ -103,14 +113,20 @@ def build_all_redirects():
     redirects = data.get("redirects", [])
     count = 0
     print(f"\n{Fore.CYAN}Compilando carpetas de redireccion estatica para GitHub Pages...{Style.RESET_ALL}")
+    
+    # Extraer slugs unicos
+    seen = set()
     for item in redirects:
         slug = item.get("slug")
         url = item.get("url")
         title = item.get("title", slug)
-        if slug and url:
+        if slug and url and slug not in seen and slug != "admin":
             generate_folder_redirect(slug, url, title)
-            print(f"  [+] Generado: /{slug}/index.html -> {url}")
+            is_pub = "Publico" if item.get("is_public", True) else "Privado"
+            print(f"  [+] Generado: /{slug}/index.html [{is_pub}] -> {url}")
+            seen.add(slug)
             count += 1
+
     print(f"{Fore.GREEN}[OK] Se compilaron exitosamente {count} carpetas de redireccion.{Style.RESET_ALL}\n")
 
 
@@ -172,6 +188,11 @@ def generate_qr(text, filename, style="nox_neon"):
 
 
 def generate_all_qrs():
+    if not QR_ENABLED:
+        print(f"\n{Fore.RED}[AVISO] Las librerias 'qrcode' y 'pillow' no estan instaladas en este entorno de Python.{Style.RESET_ALL}")
+        print("Para generar codigos QR en terminal, instala: pip install -r requirements.txt\n")
+        return
+
     data = load_redirects_data()
     base_url = data.get("base_url", "https://velasco-dev.github.io/links")
     redirects = data.get("redirects", [])
@@ -179,7 +200,7 @@ def generate_all_qrs():
     print(f"\n{Fore.CYAN}Generando codigos QR oficiales en alta definicion...{Style.RESET_ALL}")
     for item in redirects:
         slug = item.get("slug")
-        if slug:
+        if slug and slug != "admin":
             short_url = f"{base_url}/{slug}"
             out = generate_qr(short_url, f"qr_{slug}_neon.png", "nox_neon")
             print(f"  [+] QR Neón generado: assets/qrs/qr_{slug}_neon.png ({short_url})")
@@ -187,55 +208,99 @@ def generate_all_qrs():
     print(f"{Fore.GREEN}[OK] Se generaron {count} codigos QR.{Style.RESET_ALL}\n")
 
 
-def add_link(slug, url, title=None, category="general"):
-    slug = slug.strip().lower()
+def add_link(slug, url, title=None, category="general", project="nox", is_public=True):
+    slug = slug.strip().lower().replace(" ", "-")
     url = url.strip()
     title = title or slug
 
     data = load_redirects_data()
-    existing = False
-    for item in data.get("redirects", []):
-        if item.get("slug") == slug:
-            item["url"] = url
-            item["title"] = title
-            item["category"] = category
-            existing = True
+    
+    # 1. Asegurar proyecto
+    projects = data.setdefault("projects", {})
+    if project not in projects:
+        projects[project] = {
+            "id": project,
+            "name": project.upper(),
+            "tagline": f"Portal de enlaces de {project}.",
+            "theme": { "primary": "#FF007F", "cyan": "#00F0FF", "bg": "#080114" },
+            "links": []
+        }
+    
+    # 2. Agregar o actualizar en project.links
+    p_links = projects[project].setdefault("links", [])
+    found_in_proj = False
+    for l in p_links:
+        if l.get("slug") == slug:
+            l["url"] = url
+            l["title"] = title
+            l["category"] = category
+            l["is_public"] = is_public
+            found_in_proj = True
             break
-    if not existing:
-        data.setdefault("redirects", []).append({
+    if not found_in_proj:
+        p_links.append({
             "slug": slug,
             "url": url,
             "title": title,
             "category": category,
+            "is_public": is_public,
             "is_active": True
         })
+
+    # 3. Sincronizar flat redirects
+    flat = data.setdefault("redirects", [])
+    found_flat = False
+    for r in flat:
+        if r.get("slug") == slug:
+            r["url"] = url
+            r["title"] = title
+            r["category"] = category
+            r["project"] = project
+            r["is_public"] = is_public
+            found_flat = True
+            break
+    if not found_flat:
+        flat.append({
+            "slug": slug,
+            "project": project,
+            "url": url,
+            "title": title,
+            "category": category,
+            "is_public": is_public,
+            "is_active": True
+        })
+
     save_redirects_data(data)
     generate_folder_redirect(slug, url, title)
-    print(f"{Fore.GREEN}[OK] Enlace '{slug}' registrado y carpeta /{slug}/index.html compilada.{Style.RESET_ALL}")
+    pub_tag = "PUBLICO" if is_public else "PRIVADO/GERENCIAL"
+    print(f"{Fore.GREEN}[OK] Enlace '{slug}' registrado en proyecto '{project}' [{pub_tag}].{Style.RESET_ALL}")
 
 
 def list_links():
     data = load_redirects_data()
     base_url = data.get("base_url", "https://velasco-dev.github.io/links")
     redirects = data.get("redirects", [])
-    print(f"\n{Fore.CYAN}{'ALIAS':<12} | {'URL CORTA EN GITHUB':<42} | {'DESTINO'}{Style.RESET_ALL}")
-    print("-" * 90)
+    print(f"\n{Fore.CYAN}{'PROYECTO':<10} | {'ALIAS':<12} | {'TIPO':<10} | {'URL CORTA':<38} | {'DESTINO'}{Style.RESET_ALL}")
+    print("-" * 105)
     for r in redirects:
+        p = r.get("project", "nox")
         s = r.get("slug", "")
+        t = "PUBLICO" if r.get("is_public", True) else "PRIVADO"
+        color_t = Fore.GREEN if r.get("is_public", True) else Fore.MAGENTA
         sh = f"{base_url}/{s}"
         dest = (r.get("url", ""))[:32]
-        print(f"{Fore.YELLOW}{s:<12}{Style.RESET_ALL} | {sh:<42} | {dest}")
+        print(f"{Fore.YELLOW}{p:<10}{Style.RESET_ALL} | {Fore.CYAN}{s:<12}{Style.RESET_ALL} | {color_t}{t:<10}{Style.RESET_ALL} | {sh:<38} | {dest}")
     print()
 
 
 def interactive():
     while True:
         print(f"\n{Fore.MAGENTA}================================================================================")
-        print(f"{Fore.CYAN}{Style.BRIGHT}  NOX LINKS SUITE | Gestor de Redirecciones para GitHub Pages")
+        print(f"{Fore.CYAN}{Style.BRIGHT}  NOX LINKS SUITE | Gestor Multi-Proyecto para GitHub Pages")
         print(f"{Fore.MAGENTA}================================================================================")
         print("  [1] Compilar todas las carpetas de redireccion estatica")
-        print("  [2] Anadir nuevo enlace corto")
-        print("  [3] Listar enlaces registrados")
+        print("  [2] Anadir nuevo enlace (Publico o Privado)")
+        print("  [3] Listar enlaces registrados por proyecto")
         print("  [4] Generar codigos QR para todos los enlaces")
         print("  [0] Salir")
         print(f"{Fore.MAGENTA}--------------------------------------------------------------------------------")
@@ -247,8 +312,10 @@ def interactive():
             sl = input("Alias (slug, ej. promo): ").strip().lower()
             u = input("URL larga de destino: ").strip()
             t = input("Titulo descriptivo: ").strip()
+            pr = input("Proyecto [por defecto 'nox']: ").strip().lower() or "nox"
+            pub = input("Es visible en el portal publico? (s/n) [s]: ").strip().lower() != "n"
             if sl and u:
-                add_link(sl, u, t)
+                add_link(sl, u, t, project=pr, is_public=pub)
         elif opt == "3":
             list_links()
         elif opt == "4":
@@ -258,11 +325,13 @@ def interactive():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="NOX Links Suite Manager")
+    parser = argparse.ArgumentParser(description="NOX Links Suite Multi-Project Manager")
     parser.add_argument("--build", action="store_true", help="Compila todas las carpetas de redireccion")
     parser.add_argument("--list", action="store_true", help="Lista todos los enlaces")
     parser.add_argument("--qr-all", action="store_true", help="Genera todos los codigos QR")
     parser.add_argument("--add", nargs=3, metavar=("SLUG", "URL", "TITLE"), help="Anade un nuevo enlace")
+    parser.add_argument("--project", default="nox", help="Identificador del proyecto destino (default: nox)")
+    parser.add_argument("--private", action="store_true", help="Marca el enlace como privado/gerencial (oculto en portal)")
 
     args = parser.parse_args()
 
@@ -277,7 +346,8 @@ def main():
     elif args.qr_all:
         generate_all_qrs()
     elif args.add:
-        add_link(args.add[0], args.add[1], args.add[2])
+        is_pub = not args.private
+        add_link(args.add[0], args.add[1], args.add[2], project=args.project, is_public=is_pub)
 
 
 if __name__ == "__main__":

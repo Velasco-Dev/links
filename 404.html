@@ -124,6 +124,11 @@
         return;
       }
 
+      if (slug === 'admin') {
+        window.location.replace('admin/');
+        return;
+      }
+
       // Si coincide en fallback instantaneo, redirigir sin esperar
       if (FALLBACK_REDIRECTS[slug]) {
         window.location.replace(FALLBACK_REDIRECTS[slug]);

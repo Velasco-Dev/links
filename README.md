@@ -1,91 +1,62 @@
-# NOX Links Suite | Enlaces Oficiales, Redirecciones & Generador de QR
+# NOX Links Suite | Enlaces Oficiales, Redirecciones & Consola Multi-Proyecto
 
-> **Repositorio Oficial de Enlaces:** [https://github.com/Velasco-Dev/links](https://github.com/Velasco-Dev/links)  
-> **Portal Publico en Vivo:** [https://velasco-dev.github.io/links/](https://velasco-dev.github.io/links/)
+> **Repositorio Oficial:** [https://github.com/Velasco-Dev/links](https://github.com/Velasco-Dev/links)  
+> **Portal Publico de Marca:** [https://velasco-dev.github.io/links/](https://velasco-dev.github.io/links/)  
+> **Consola Gerencial Privada:** Acceso restringido bajo autenticacion en `/admin/`
 
-Suite unificada para acortar enlaces hacia aplicaciones web (como Google Apps Script), gestionar el portal movil de marca para Instagram y generar codigos QR en alta definicion con la identidad visual Cyberpunk de **NOX Slush & Beats**.
+Suite de alta velocidad para la gestion centralizada de enlaces cortos, portales de marca moviles (Bio Link) para redes sociales, generacion de codigos QR de alta definicion y administracion multi-proyecto protegida criptograficamente para **NOX Slush & Beats** y futuras marcas satelite.
 
 ---
 
 ## 1. Caracteristicas Principales
 
-1. **Redirecciones Ultrarrapidas sin Servidor:**
-   - Alojado 100% en GitHub Pages: cero costos, cero publicidad y disponibilidad 24/7 en todo el mundo.
-   - Enlaces cortos limpios para Instagram, WhatsApp o material impreso: `https://velasco-dev.github.io/links/<alias>`.
-   - Redireccion instantanea con soporte dual: carpetas fisicas (`<alias>/index.html`) y enrutador SPA (`404.html` + `redirects.json`).
+1. **Arquitectura Multi-Proyecto en un Mismo Contenedor:**
+   - Soporte para multiples marcas y proyectos simultaneos dentro del mismo repositorio de GitHub Pages.
+   - Cada proyecto cuenta con su propia identidad visual (paleta de colores, logotipo, tipografias), su propio catalogo de enlaces y su propia configuracion.
+   - Proyecto predeterminado en la raiz (`https://velasco-dev.github.io/links/`) y proyectos secundarios accesibles dinamicamente via `?p=slug`.
 
-2. **Portal Publico de Marca (`index.html`):**
-   - Pagina de inicio tipo Bio Link / Linktree con botones oficiales para acceder al Menú Digital, Instagram, WhatsApp y Base de Datos.
-   - Diseno responsivo con efecto desenfoque Liquid Glass y tipografias Orbitron y Outfit.
+2. **Segregacion Estricta de Enlaces (Publico vs Privado/Gerencial):**
+   - **Enlaces Publicos:** Unicamente los canales de cara al cliente (Menu Digital, Instagram oficial, WhatsApp) se visualizan en el portal de marca.
+   - **Enlaces Privados / Gerenciales:** Accesos operativos a bases de datos (Google Sheets) y entornos de desarrollo (Google Apps Script) se mantienen completamente ocultos al publico y solo son visibles/gestionables en la consola gerencial.
 
-3. **Consola de Administracion Unificada (`admin.html`):**
-   - Recortador de enlaces interactivo con generador de slugs aleatorios.
-   - Generador y visor de codigos QR con selector de paletas (Neón Magenta, Clasico B&W, Cian Electrico) y descarga en PNG.
-   - Modo Claro y Modo Oscuro integrados.
-   - Modulo extensible para futuras utilidades operativas.
+3. **Consola Gerencial Privada con Barrera Criptografica (`admin/`):**
+   - Ubicada de forma privada en `/admin/` (sin ningun boton o enlace publico expuesto en el portal principal).
+   - Bloqueo criptografico basado en SHA-256 con salt. La sesion activa reside en `sessionStorage` y expira automaticamente al cerrar la pestana.
+   - Gestion completa de proyectos, modificacion de estilos en vivo, conmutador de temas (Dark/Light) y generador de codigos QR calibrado a los colores de cada marca.
+   - Atajo secreto de acceso de propietario disponible haciendo 5 toques rapidos consecutivos sobre el logotipo circular del portal publico.
 
 4. **Motor CLI en Python (`manager.py`):**
-   - Compila automaticamente todas las carpetas de redireccion a partir de `redirects.json`.
-   - Genera codigos QR en lote con incrustacion de logotipo circular.
+   - Compila automaticamente las carpetas fisicas de redireccion (`<slug>/index.html`) para garantizar respuesta HTTP 200 directa.
+   - Genera codigos QR en lote con incrustacion de logotipo y mascara circular de proteccion.
+   - Identifica y lista enlaces distinguiendo su visibilidad publica o privada.
 
 ---
 
-## 2. Enlaces Oficiales Preconfigurados
+## 2. Catalogo de Enlaces de NOX Slush & Beats
 
-| Alias | Enlace Publico en GitHub | Destino Oficial |
-| :--- | :--- | :--- |
-| `/menu` | [https://velasco-dev.github.io/links/menu](https://velasco-dev.github.io/links/menu) | Web App & Menu Digital de NOX (Google Apps Script) |
-| `/db` | [https://velasco-dev.github.io/links/db](https://velasco-dev.github.io/links/db) | Base de Datos Central Google Sheets (7 Pestanas) |
-| `/editor` | [https://velasco-dev.github.io/links/editor](https://velasco-dev.github.io/links/editor) | Editor de Codigo Google Apps Script |
-| `/ig` | [https://velasco-dev.github.io/links/ig](https://velasco-dev.github.io/links/ig) | Perfil Oficial de Instagram @noxslushnbeats |
+| Alias | Enlace Corto en GitHub | Destino Real | Visibilidad |
+| :--- | :--- | :--- | :--- |
+| `/menu` | [velasco-dev.github.io/links/menu](https://velasco-dev.github.io/links/menu) | Menu Digital & Web App Oficial (GAS) | Publico |
+| `/ig` | [velasco-dev.github.io/links/ig](https://velasco-dev.github.io/links/ig) | Instagram Oficial @noxslushnbeats | Publico |
+| `/wa` | [velasco-dev.github.io/links/wa](https://velasco-dev.github.io/links/wa) | WhatsApp Oficial & Cotizaciones | Publico |
+| `/db` | [velasco-dev.github.io/links/db](https://velasco-dev.github.io/links/db) | Base de Datos Sheets (7 Pestanas) | Privado / Gerencial |
+| `/editor` | [velasco-dev.github.io/links/editor](https://velasco-dev.github.io/links/editor) | Editor Cloud de Apps Script | Privado / Gerencial |
 
 ---
 
-## 3. Pasos para Publicar en GitHub Pages
+## 3. Guia Operativa de Sincronizacion
 
-Para conectar esta carpeta con tu repositorio en GitHub y poner los enlaces en vivo para todo el planeta:
-
-### Paso 1: Subir los archivos a GitHub
-
-Abre PowerShell en la carpeta `G:\Ingenieria Informatica\Git Externo\links` y ejecuta:
+Cada vez que realices cambios en los enlaces o en la consola administrativa:
 
 ```powershell
-git init
-git remote add origin https://github.com/Velasco-Dev/links.git
-git add .
-git commit -m "Inicializar suite de enlaces NOX y redirecciones GitHub Pages"
-git branch -M main
-git push -u origin main
-```
-
-*(Si ya tenias el repositorio clonado o inicializado, simplemente haz `git add .`, `git commit -m "..."` y `git push`)*.
-
-### Paso 2: Activar GitHub Pages en el Repositorio
-
-1. Entra a tu repositorio en GitHub: [https://github.com/Velasco-Dev/links](https://github.com/Velasco-Dev/links)
-2. Haz clic en la pestaña **Settings** (en la barra superior).
-3. En el menu de la izquierda, entra a **Pages**.
-4. En **Build and deployment > Branch**:
-   - Selecciona la rama **main**.
-   - Selecciona la carpeta **/ (root)**.
-5. Haz clic en el botón **Save**.
-
-En menos de un minuto tu portal estara activo en `https://velasco-dev.github.io/links/` y cualquier persona que entre a `https://velasco-dev.github.io/links/menu` saltara de inmediato a tu aplicacion de Google Apps Script.
-
----
-
-## 4. Uso del Asistente Python (`manager.py`)
-
-```powershell
-# Compilar todas las carpetas de redireccion
+# 1. Compilar carpetas fisicas de redireccion
 python manager.py --build
 
-# Generar todos los codigos QR en alta resolucion
+# 2. Generar codigos QR (opcional)
 python manager.py --qr-all
 
-# Listar enlaces registrados
-python manager.py --list
-
-# Agregar un nuevo enlace
-python manager.py --add "promo" "https://tu-sitio.com/promo" "Promocion Especial"
+# 3. Publicar en GitHub Pages
+git add .
+git commit -m "Actualizar suite multi-proyecto y configuracion de seguridad"
+git push origin main
 ```
