@@ -115,6 +115,20 @@ G:\Ingenieria Informatica\Git Externo\links/
 
 ## 3. Bitacora de Evolucion y Versiones
 
+### Version 2.2.5 (10 de Noviembre de 2026) - Declaracion de Favicon Universal y Eliminacion de Alertas 404
+
+* **Objetivo:** Erradicar la advertencia de red `GET https://velasco-dev.github.io/favicon.ico 404 (Not Found)` en la consola del navegador mediante declaracion explicita de icono en todos los modulos HTML.
+* **Problemas Abordados:**
+  1. Al carecer de `<link rel="icon">`, los navegadores web solicitaban por defecto el archivo `/favicon.ico` al dominio raiz (`velasco-dev.github.io`), generando un error 404 en DevTools que se confundia con fallos funcionales del aplicativo.
+* **Acciones Implementadas:**
+  - Declaracion de favicon SVG vectorial embebido de alto rendimiento e icono alternativo JPEG en [`index.html`](../index.html), [`admin/index.html`](../admin/index.html) y en la plantilla del compilador [`manager.py`](../manager.py).
+  - Generacion del archivo fisico `favicon.ico` en la raiz del repositorio.
+* **Verificacion:**
+  - Eliminacion de la advertencia 404 de favicon en la consola de herramientas de desarrollo.
+  - Canon Cero Emojis comprobado.
+
+---
+
 ### Version 2.2.4 (10 de Noviembre de 2026) - Enlace Bidireccional de Selectores de Color y Mitigacion de SHA Mismatch
 
 * **Objetivo:** Resolver la perdida de valores al seleccionar colores en la paleta grafica y blindar la sincronizacion con GitHub contra respuestas cacheadas de la API.
