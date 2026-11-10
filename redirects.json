@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0.0",
   "base_url": "https://velasco-dev.github.io/links",
-  "updated_at": "2026-11-10T18:32:55.908Z",
+  "updated_at": "2026-11-10T18:36:36.715Z",
   "default_project": "nox",
   "security": {
     "auth_enabled": true,
@@ -102,10 +102,10 @@
           "url": "https://www.instagram.com/smartechno7",
           "title": "Instagram Oficial",
           "description": "@smartechno7 - Novedades, fotos y promociones",
-          "icon": "fa-solid fa-link",
+          "icon": "fa-brands fa-instagram",
           "category": "social",
           "is_public": true,
-          "highlight": true,
+          "highlight": false,
           "is_active": true
         }
       ]
