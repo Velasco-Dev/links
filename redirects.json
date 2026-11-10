@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0.0",
   "base_url": "https://velasco-dev.github.io/links",
-  "updated_at": "2026-11-10T17:28:45.646Z",
+  "updated_at": "2026-11-10T17:36:59.001Z",
   "default_project": "nox",
   "security": {
     "auth_enabled": true,
@@ -83,6 +83,32 @@
           "is_active": true
         }
       ]
+    },
+    "smartechno": {
+      "id": "smartechno",
+      "name": "SmartechnO",
+      "tagline": "Somos una empresa Popayanesa, creada con un único objetivo, dar soporte a tus necesidades tecnológicas. 🚀",
+      "theme": {
+        "bg": "#0B0F19",
+        "card": "rgba(18, 24, 38, 0.88)",
+        "primary": "#00f0ff",
+        "cyan": "#38BDF8",
+        "border": "#00f0ff40",
+        "logo": "../assets/logo.jpeg"
+      },
+      "links": [
+        {
+          "slug": "smartechno",
+          "url": "https://www.instagram.com/smartechno7",
+          "title": "Instagram Oficial",
+          "description": "@smartechno7 - Novedades, fotos y promociones",
+          "icon": "fa-solid fa-link",
+          "category": "social",
+          "is_public": true,
+          "highlight": true,
+          "is_active": true
+        }
+      ]
     }
   },
   "redirects": [
@@ -134,6 +160,16 @@
       "description": "Entorno de programacion backend y logica operativa en Google Cloud",
       "category": "desarrollo",
       "is_public": false,
+      "is_active": true
+    },
+    {
+      "slug": "smartechno",
+      "project": "smartechno",
+      "url": "https://www.instagram.com/smartechno7",
+      "title": "Instagram Oficial",
+      "description": "@smartechno7 - Novedades, fotos y promociones",
+      "category": "social",
+      "is_public": true,
       "is_active": true
     }
   ]
