@@ -31,7 +31,7 @@ Chats/
 
 | Archivo | Modulo / Alcance | Estado | Ultima Version |
 | :--- | :--- | :--- | :--- |
-| [`Chats/Links.md`](Links.md) | Suite completa multi-proyecto, rutas jerarquicas /<proyecto>/<slug> y cargador de logos | Activo / En Produccion | 2.2.0 |
+| [`Chats/Links.md`](Links.md) | Suite completa multi-proyecto, rutas jerarquicas /<proyecto>/<slug> y cargador de logos | Activo / En Produccion | 2.2.1 |
 
 ---
 

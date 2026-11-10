@@ -115,6 +115,21 @@ G:\Ingenieria Informatica\Git Externo\links/
 
 ## 3. Bitacora de Evolucion y Versiones
 
+### Version 2.2.1 (10 de Noviembre de 2026) - Parche de Estabilidad en Consola Gerencial (Cierre de Sintaxis JS)
+
+* **Objetivo:** Subsanar error de sintaxis en `admin/index.html` que bloqueaba el parseo del script principal y la funcion de desbloqueo `handleUnlock()`.
+* **Problemas Abordados:**
+  1. Presencia de un bloque redundante de cierre `generatePreviewQr(); }` en la linea 1785 de `admin/index.html` que arrojaba `Uncaught SyntaxError: Unexpected token '}'`.
+  2. Fallo en cascada que impedia la carga de `handleUnlock` arrojando `ReferenceError` al intentar ingresar la clave en la pantalla de bloqueo.
+* **Acciones Implementadas:**
+  - Remocion de las lineas duplicadas en `admin/index.html`.
+  - Verificacion automatica con `node --check` para todos los bloques `<script>` de los modulos HTML del proyecto.
+* **Verificacion:**
+  - Validacion de sintaxis 100% exitosa con Node.js en `admin/index.html`, `index.html` y `404.html`.
+  - Canon Cero Emojis comprobado.
+
+---
+
 ### Version 2.2.0 (10 de Noviembre de 2026) - Directorio Maestro de Marcas, Enrutamiento Jerarquico por Proyecto y Cargador de Logos
 
 * **Objetivo:** Transformar la raiz del repositorio en un Directorio Maestro de proyectos, organizar los enlaces bajo rutas jerarquicas estrictas (`/links/<proyecto>/<slug>`) e integrar un modulo de subida directa de logotipos para nuevas empresas.
