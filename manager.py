@@ -66,12 +66,13 @@ def save_redirects_data(data):
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
-def generate_folder_redirect(slug, target_url, title):
-    # Evitar sobreescribir la carpeta administrativa si se llama 'admin'
-    if slug == "admin":
+def generate_folder_redirect(slug, target_url, title, parent_folder=None):
+    base = parent_folder if parent_folder is not None else BASE_DIR
+    # Evitar sobreescribir la carpeta administrativa si se llama 'admin' en la raiz
+    if slug == "admin" and base == BASE_DIR:
         return BASE_DIR / "admin" / "index.html"
 
-    folder = BASE_DIR / slug
+    folder = base / slug
     folder.mkdir(parents=True, exist_ok=True)
     index_file = folder / "index.html"
 
@@ -125,7 +126,7 @@ def generate_project_portal(proj_id, proj_data, base_url):
     cyan = theme.get("cyan", "#00F0FF")
     border = theme.get("border", "rgba(255, 0, 127, 0.25)")
     logo = theme.get("logo", "assets/logo.jpeg")
-    if not logo.startswith("http") and not logo.startswith("../"):
+    if not logo.startswith("http") and not logo.startswith("data:") and not logo.startswith("../"):
         logo = f"../{logo}"
 
     links = proj_data.get("links", [])
@@ -140,13 +141,12 @@ def generate_project_portal(proj_id, proj_data, base_url):
         icon = l.get("icon", "fa-solid fa-link")
         highlight = l.get("highlight", False)
         
-        target_href = url if (url.startswith("http") or url.startswith("mailto:") or url.startswith("tel:")) else f"../{slug}/"
-        target_attr = 'target="_blank" rel="noopener noreferrer"' if url.startswith("http") else ''
+        target_href = f"{slug}/" if not (url.startswith("http") or url.startswith("mailto:") or url.startswith("tel:")) else f"{slug}/"
         hl_class = " highlight" if highlight else ""
         icon_style = '' if highlight else 'style="color: var(--cyan);"'
 
         buttons_html += f"""
-      <a href="{target_href}" {target_attr} class="link-btn{hl_class}">
+      <a href="{target_href}" class="link-btn{hl_class}">
         <div class="link-icon" {icon_style}><i class="{icon}"></i></div>
         <div class="link-content">
           <div class="link-title">{title}</div>
@@ -229,7 +229,7 @@ def generate_project_portal(proj_id, proj_data, base_url):
 </head>
 <body>
   <div class="portal-card">
-    <div class="brand-logo-frame">
+    <div class="brand-logo-frame" id="project-logo-trigger" title="Canales Oficiales">
       <img src="{logo}" alt="Logo de Marca" onerror="this.src='https://via.placeholder.com/150/12072b/00f0ff?text={proj_id}'">
     </div>
     <h1>{name}</h1>
@@ -241,6 +241,19 @@ def generate_project_portal(proj_id, proj_data, base_url):
       <span>{name} &copy; 2026 | Canales Oficiales</span>
     </footer>
   </div>
+  <script>
+    let clickCount = 0;
+    let timer = null;
+    const trigger = document.getElementById('project-logo-trigger');
+    if (trigger) {{
+      trigger.addEventListener('click', () => {{
+        clickCount++;
+        clearTimeout(timer);
+        if (clickCount >= 5) {{ window.location.href = '../admin/'; }}
+        timer = setTimeout(() => {{ clickCount = 0; }}, 1500);
+      }});
+    }}
+  </script>
 </body>
 </html>
 """
@@ -257,29 +270,42 @@ def build_all_redirects():
     count_slugs = 0
     count_projects = 0
 
-    print(f"\n{Fore.CYAN}Compilando portales de proyectos y carpetas de redireccion...{Style.RESET_ALL}")
+    print(f"\n{Fore.CYAN}Compilando arquitectura modular multi-proyecto para GitHub Pages...{Style.RESET_ALL}")
 
-    # 1. Compilar portales fisicos para cada proyecto registrado (ej. /nox/index.html)
+    # 1. Compilar portales y enlaces de cada proyecto (ej. /nox/ y /nox/menu/)
     for p_id, p_data in projects.items():
         if p_id != "admin":
             generate_project_portal(p_id, p_data, base_url)
-            print(f"  [+] Portal de Proyecto compilado: /{p_id}/index.html ({p_data.get('name', p_id)})")
+            print(f"  [+] Portal de Proyecto: /{p_id}/index.html ({p_data.get('name', p_id)})")
             count_projects += 1
+
+            # Compilar sub-rutas especificas del proyecto (ej. /nox/menu/, /nox/ig/)
+            p_folder = BASE_DIR / p_id
+            for l in p_data.get("links", []):
+                l_slug = l.get("slug")
+                l_url = l.get("url")
+                l_title = l.get("title", l_slug)
+                if l_slug and l_url:
+                    generate_folder_redirect(l_slug, l_url, l_title, parent_folder=p_folder)
+                    is_pub = "Publico" if l.get("is_public", True) else "Privado"
+                    print(f"      -> /{p_id}/{l_slug}/index.html [{is_pub}] -> {l_url}")
+                    count_slugs += 1
     
-    # 2. Extraer y compilar slugs unicos de redireccion
-    seen = set()
+    # 2. Compilar enlaces en la raiz para compatibilidad retroactiva directa (ej. /menu/)
+    seen_root = set(projects.keys())
+    seen_root.add("admin")
     for item in redirects:
         slug = item.get("slug")
         url = item.get("url")
         title = item.get("title", slug)
-        if slug and url and slug not in seen and slug != "admin" and slug not in projects:
+        if slug and url and slug not in seen_root:
             generate_folder_redirect(slug, url, title)
             is_pub = "Publico" if item.get("is_public", True) else "Privado"
-            print(f"  [+] Redireccion compilada: /{slug}/index.html [{is_pub}] -> {url}")
-            seen.add(slug)
+            print(f"  [+] Redireccion raiz: /{slug}/index.html [{is_pub}] -> {url}")
+            seen_root.add(slug)
             count_slugs += 1
 
-    print(f"{Fore.GREEN}[OK] Se compilaron {count_projects} portales de proyecto y {count_slugs} rutas de redireccion.{Style.RESET_ALL}\n")
+    print(f"{Fore.GREEN}[OK] Se compilaron {count_projects} proyectos con sus sub-enlaces y {count_slugs} rutas de redireccion.{Style.RESET_ALL}\n")
 
 
 def generate_qr(text, filename, style="nox_neon"):
@@ -423,25 +449,28 @@ def add_link(slug, url, title=None, category="general", project="nox", is_public
         })
 
     save_redirects_data(data)
+    p_folder = BASE_DIR / project
+    generate_folder_redirect(slug, url, title, parent_folder=p_folder)
     generate_folder_redirect(slug, url, title)
     pub_tag = "PUBLICO" if is_public else "PRIVADO/GERENCIAL"
     print(f"{Fore.GREEN}[OK] Enlace '{slug}' registrado en proyecto '{project}' [{pub_tag}].{Style.RESET_ALL}")
+    print(f"     URL Oficial: {data.get('base_url')}/{project}/{slug}")
 
 
 def list_links():
     data = load_redirects_data()
     base_url = data.get("base_url", "https://velasco-dev.github.io/links")
     redirects = data.get("redirects", [])
-    print(f"\n{Fore.CYAN}{'PROYECTO':<10} | {'ALIAS':<12} | {'TIPO':<10} | {'URL CORTA':<38} | {'DESTINO'}{Style.RESET_ALL}")
-    print("-" * 105)
+    print(f"\n{Fore.CYAN}{'PROYECTO':<10} | {'ALIAS':<12} | {'TIPO':<10} | {'URL CORTA DEL PROYECTO':<45} | {'DESTINO'}{Style.RESET_ALL}")
+    print("-" * 115)
     for r in redirects:
         p = r.get("project", "nox")
         s = r.get("slug", "")
         t = "PUBLICO" if r.get("is_public", True) else "PRIVADO"
         color_t = Fore.GREEN if r.get("is_public", True) else Fore.MAGENTA
-        sh = f"{base_url}/{s}"
+        sh = f"{base_url}/{p}/{s}"
         dest = (r.get("url", ""))[:32]
-        print(f"{Fore.YELLOW}{p:<10}{Style.RESET_ALL} | {Fore.CYAN}{s:<12}{Style.RESET_ALL} | {color_t}{t:<10}{Style.RESET_ALL} | {sh:<38} | {dest}")
+        print(f"{Fore.YELLOW}{p:<10}{Style.RESET_ALL} | {Fore.CYAN}{s:<12}{Style.RESET_ALL} | {color_t}{t:<10}{Style.RESET_ALL} | {sh:<45} | {dest}")
     print()
 
 

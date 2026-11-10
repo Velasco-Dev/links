@@ -71,7 +71,7 @@
 </head>
 <body>
   <div class="portal-card">
-    <div class="brand-logo-frame">
+    <div class="brand-logo-frame" id="project-logo-trigger" title="Canales Oficiales">
       <img src="../assets/logo.jpeg" alt="Logo de Marca" onerror="this.src='https://via.placeholder.com/150/12072b/00f0ff?text=nox'">
     </div>
     <h1>NOX SLUSH & BEATS</h1>
@@ -79,7 +79,7 @@
 Granizados Artesanales, Obleas Gourmet y Bebidas Signature.</p>
     <div class="links-list">
       
-      <a href="https://script.google.com/macros/s/AKfycbzBLqsY6YqLex1KzvvlBT5viV8KNmw2VlKL8kZ-Wn5_/dev" target="_blank" rel="noopener noreferrer" class="link-btn highlight">
+      <a href="menu/" class="link-btn highlight">
         <div class="link-icon" ><i class="fa-solid fa-snowflake"></i></div>
         <div class="link-content">
           <div class="link-title">Menu Digital & Pedidos en Linea</div>
@@ -88,7 +88,7 @@ Granizados Artesanales, Obleas Gourmet y Bebidas Signature.</p>
         <div class="link-arrow"><i class="fa-solid fa-chevron-right"></i></div>
       </a>
 
-      <a href="https://www.instagram.com/noxslushnbeats/" target="_blank" rel="noopener noreferrer" class="link-btn">
+      <a href="ig/" class="link-btn">
         <div class="link-icon" style="color: var(--cyan);"><i class="fa-brands fa-instagram"></i></div>
         <div class="link-content">
           <div class="link-title">Instagram Oficial</div>
@@ -102,5 +102,18 @@ Granizados Artesanales, Obleas Gourmet y Bebidas Signature.</p>
       <span>NOX SLUSH & BEATS &copy; 2026 | Canales Oficiales</span>
     </footer>
   </div>
+  <script>
+    let clickCount = 0;
+    let timer = null;
+    const trigger = document.getElementById('project-logo-trigger');
+    if (trigger) {
+      trigger.addEventListener('click', () => {
+        clickCount++;
+        clearTimeout(timer);
+        if (clickCount >= 5) { window.location.href = '../admin/'; }
+        timer = setTimeout(() => { clickCount = 0; }, 1500);
+      });
+    }
+  </script>
 </body>
 </html>

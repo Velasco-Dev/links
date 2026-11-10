@@ -1,55 +1,58 @@
 # NOX Links Suite | Enlaces Oficiales, Redirecciones & Consola Multi-Proyecto
 
 > **Repositorio Oficial:** [https://github.com/Velasco-Dev/links](https://github.com/Velasco-Dev/links)  
-> **Portal Publico de Marca:** [https://velasco-dev.github.io/links/](https://velasco-dev.github.io/links/)  
+> **Directorio Maestro de Proyectos:** [https://velasco-dev.github.io/links/](https://velasco-dev.github.io/links/)  
+> **Portal Oficial NOX Slush & Beats:** [https://velasco-dev.github.io/links/nox/](https://velasco-dev.github.io/links/nox/)  
 > **Consola Gerencial Privada:** Acceso restringido bajo autenticacion en `/admin/`
 
-Suite de alta velocidad para la gestion centralizada de enlaces cortos, portales de marca moviles (Bio Link) para redes sociales, generacion de codigos QR de alta definicion y administracion multi-proyecto protegida criptograficamente para **NOX Slush & Beats** y futuras marcas satelite.
+Suite de alto rendimiento para la gestion centralizada de enlaces cortos, portales de marca moviles (Bio Link), generacion de codigos QR y administracion multi-empresa protegida criptograficamente para **NOX Slush & Beats** y futuras marcas satelite.
 
 ---
 
-## 1. Caracteristicas Principales
+## 1. Arquitectura de Rutas del Repositorio
 
-1. **Arquitectura Multi-Proyecto en un Mismo Contenedor:**
-   - Soporte para multiples marcas y proyectos simultaneos dentro del mismo repositorio de GitHub Pages.
-   - Cada proyecto cuenta con su propia identidad visual (paleta de colores, logotipo, tipografias), su propio catalogo de enlaces y su propia configuracion.
-   - Proyecto predeterminado en la raiz (`https://velasco-dev.github.io/links/`) y proyectos secundarios accesibles dinamicamente via `?p=slug`.
+La suite opera bajo un esquema jerarquico y modular:
 
-2. **Segregacion Estricta de Enlaces (Publico vs Privado/Gerencial):**
-   - **Enlaces Publicos:** Unicamente los canales de cara al cliente (Menu Digital, Instagram oficial, WhatsApp) se visualizan en el portal de marca.
-   - **Enlaces Privados / Gerenciales:** Accesos operativos a bases de datos (Google Sheets) y entornos de desarrollo (Google Apps Script) se mantienen completamente ocultos al publico y solo son visibles/gestionables en la consola gerencial.
+1. **Directorio Maestro de Marcas (`/links/`):**
+   * Es la base central de la plataforma (`https://velasco-dev.github.io/links/`). Muestra las tarjetas de todas las marcas y proyectos registrados con su respectivo logo, descripcion y acceso a su portal.
 
-3. **Consola Gerencial Privada con Barrera Criptografica (`admin/`):**
-   - Ubicada de forma privada en `/admin/` (sin ningun boton o enlace publico expuesto en el portal principal).
-   - Bloqueo criptografico basado en SHA-256 con salt. La sesion activa reside en `sessionStorage` y expira automaticamente al cerrar la pestana.
-   - Gestion completa de proyectos, modificacion de estilos en vivo, conmutador de temas (Dark/Light) y generador de codigos QR calibrado a los colores de cada marca.
-   - Atajo secreto de acceso de propietario disponible haciendo 5 toques rapidos consecutivos sobre el logotipo circular del portal publico.
+2. **Portal Bio Link por Empresa (`/links/<proyecto>/`):**
+   * Cada marca tiene su propio portal independiente con su propia identidad visual, logotipo, paleta cromatica y listado exclusivo de enlaces publicos:
+     * Portal NOX: `https://velasco-dev.github.io/links/nox/`
+     * Portal Empresa X: `https://velasco-dev.github.io/links/xproyecto/`
 
-4. **Motor CLI en Python (`manager.py`):**
-   - Compila automaticamente las carpetas fisicas de redireccion (`<slug>/index.html`) para garantizar respuesta HTTP 200 directa.
-   - Genera codigos QR en lote con incrustacion de logotipo y mascara circular de proteccion.
-   - Identifica y lista enlaces distinguiendo su visibilidad publica o privada.
+3. **Enlaces Cortos por Empresa (`/links/<proyecto>/<slug>`):**
+   * Cada enlace corto se encuentra estrictamente organizado dentro de la ruta de su proyecto:
+     * `https://velasco-dev.github.io/links/nox/menu` -> Redirige al Menu Digital
+     * `https://velasco-dev.github.io/links/nox/ig` -> Redirige al Instagram Oficial
+     * `https://velasco-dev.github.io/links/nox/wa` -> Redirige a WhatsApp Oficial
+     * `https://velasco-dev.github.io/links/xproyecto/catalogo` -> Redirige al catalogo de X proyecto
+
+4. **Consola Gerencial Privada (`/links/admin/`):**
+   * Acceso exclusivo del propietario protegido por barrera criptografica (SHA-256 + salt).
+   * Creador de nuevos proyectos y subida directa de logos de nuevas empresas desde archivo (PNG, JPG, WebP o SVG con optimizacion automatica).
+   * Sincronizacion en tiempo real con GitHub REST API para commits automaticos en la nube.
 
 ---
 
 ## 2. Catalogo de Enlaces de NOX Slush & Beats
 
-| Alias | Enlace Corto en GitHub | Destino Real | Visibilidad |
+| Alias | Enlace Corto Oficial | Destino Real | Visibilidad |
 | :--- | :--- | :--- | :--- |
-| `/menu` | [velasco-dev.github.io/links/menu](https://velasco-dev.github.io/links/menu) | Menu Digital & Web App Oficial (GAS) | Publico |
-| `/ig` | [velasco-dev.github.io/links/ig](https://velasco-dev.github.io/links/ig) | Instagram Oficial @noxslushnbeats | Publico |
-| `/wa` | [velasco-dev.github.io/links/wa](https://velasco-dev.github.io/links/wa) | WhatsApp Oficial & Cotizaciones | Publico |
-| `/db` | [velasco-dev.github.io/links/db](https://velasco-dev.github.io/links/db) | Base de Datos Sheets (7 Pestanas) | Privado / Gerencial |
-| `/editor` | [velasco-dev.github.io/links/editor](https://velasco-dev.github.io/links/editor) | Editor Cloud de Apps Script | Privado / Gerencial |
+| `/nox/menu` | [velasco-dev.github.io/links/nox/menu](https://velasco-dev.github.io/links/nox/menu) | Menu Digital & Web App Oficial (GAS) | Publico |
+| `/nox/ig` | [velasco-dev.github.io/links/nox/ig](https://velasco-dev.github.io/links/nox/ig) | Instagram Oficial @noxslushnbeats | Publico |
+| `/nox/wa` | [velasco-dev.github.io/links/nox/wa](https://velasco-dev.github.io/links/nox/wa) | WhatsApp Oficial & Cotizaciones | Publico |
+| `/nox/db` | [velasco-dev.github.io/links/nox/db](https://velasco-dev.github.io/links/nox/db) | Base de Datos Sheets (7 Pestanas) | Privado / Gerencial |
+| `/nox/editor` | [velasco-dev.github.io/links/nox/editor](https://velasco-dev.github.io/links/nox/editor) | Editor Cloud de Apps Script | Privado / Gerencial |
 
 ---
 
 ## 3. Guia Operativa de Sincronizacion
 
-Cada vez que realices cambios en los enlaces o en la consola administrativa:
+Cada vez que agregues o edites proyectos en local:
 
 ```powershell
-# 1. Compilar carpetas fisicas de redireccion
+# 1. Compilar portales y carpetas de redireccion
 python manager.py --build
 
 # 2. Generar codigos QR (opcional)
@@ -57,6 +60,6 @@ python manager.py --qr-all
 
 # 3. Publicar en GitHub Pages
 git add .
-git commit -m "Actualizar suite multi-proyecto y configuracion de seguridad"
+git commit -m "Actualizar portales y enlaces de proyectos"
 git push origin main
 ```

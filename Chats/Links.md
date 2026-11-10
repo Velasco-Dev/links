@@ -115,6 +115,32 @@ G:\Ingenieria Informatica\Git Externo\links/
 
 ## 3. Bitacora de Evolucion y Versiones
 
+### Version 2.2.0 (10 de Noviembre de 2026) - Directorio Maestro de Marcas, Enrutamiento Jerarquico por Proyecto y Cargador de Logos
+
+* **Objetivo:** Transformar la raiz del repositorio en un Directorio Maestro de proyectos, organizar los enlaces bajo rutas jerarquicas estrictas (`/links/<proyecto>/<slug>`) e integrar un modulo de subida directa de logotipos para nuevas empresas.
+* **Problemas Abordados:**
+  1. La raiz mostraba unicamente a NOX y los demas proyectos dependian de parametros `?p=slug`, impidiendo que `/links/` funcionara como la base central del ecosistema.
+  2. Los enlaces cortos no estaban anidados por proyecto (`/links/menu` en lugar de `/links/nox/menu`), impidiendo tener un enlace con el mismo alias para diferentes empresas (ej. `/nox/menu` y `/xproyecto/menu`).
+  3. No existia una interfaz grafica para que el usuario pudiera subir el logotipo de una nueva empresa directamente desde su dispositivo (movil o PC).
+* **Acciones Implementadas:**
+  1. **Directorio Maestro de Marcas en la Raiz (`index.html`):**
+     - Rediseño de [`index.html`](../index.html) como un Hub Maestro que consulta [`redirects.json`](../redirects.json) y despliega tarjetas visuales para cada marca registrada (logo circular, nombre, descripcion y boton de acceso directo `/links/<proyecto>/`).
+     - Preservacion del atajo secreto de 5 clics hacia `/admin/` en el logo maestro.
+  2. **Enrutamiento Jerarquico por Proyecto (`/links/<proyecto>/<slug>`):**
+     - Actualizacion de [`manager.py`](../manager.py) para compilar sub-carpetas fisicas directas (`<proyecto>/<slug>/index.html`), permitiendo URLs limpias como `https://velasco-dev.github.io/links/nox/menu` y `https://velasco-dev.github.io/links/xproyecto/catalogo`.
+     - Actualizacion del enrutador dinámico en [`404.html`](../404.html) para descomponer la ruta en 2 segmentos (`cleanSegments[0] = project`, `cleanSegments[1] = slug`) y resolver redirecciones en tiempo real para proyectos recien anadidos desde la web.
+     - Preservacion de enlaces en la raiz para compatibilidad retroactiva.
+  3. **Cargador y Optimizador de Logotipos en Consola Gerencial (`admin/index.html`):**
+     - Incorporacion de selector de archivos `<input type="file">` tanto en el editor de marca activa como en el formulario de creacion de nuevos proyectos.
+     - Funcion JavaScript `handleLogoUpload()` con compresion automatica en Canvas HTML5 (maximo 260x260 px en PNG) que transforma la imagen en Data URL Base64 de alta resolucion y bajo peso, guardandose directamente en [`redirects.json`](../redirects.json).
+     - Previsualizador en vivo del logo circular tanto en la consola como al crear un nuevo proyecto.
+* **Verificacion:**
+  - Compilacion exitosa de 1 proyecto con 5 sub-enlaces fisicos (`/nox/menu/`, `/nox/ig/`, `/nox/wa/`, etc.) y 5 enlaces raiz de respaldo.
+  - Verificacion de resolucion dinamica en `404.html` para rutas compuestas.
+  - Cero emojis verificado en todo el codigo y documentacion.
+
+---
+
 ### Version 2.1.0 (10 de Noviembre de 2026) - Base de Datos en Vivo (GitHub Cloud API) y Rutas Fisicas Multi-Proyecto
 
 * **Objetivo:** Resolver la persistencia en tiempo real en GitHub Pages permitiendo guardar cambios directamente desde la aplicacion web y habilitar rutas de acceso fisicas directas (`/links/nox`, `/links/<xproyecto>`).

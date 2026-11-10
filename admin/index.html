@@ -932,8 +932,17 @@
                 </div>
               </div>
               <div class="form-group">
-                <label>Ruta o URL del Logotipo:</label>
-                <input type="text" id="brand-logo-url" class="form-control" placeholder="assets/logo.jpeg o URL https://...">
+                <label>Logotipo del Proyecto / Empresa:</label>
+                <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.5rem;">
+                  <div style="width: 48px; height: 48px; border-radius: 50%; padding: 2px; border: 1.5px solid var(--border-cyan); flex-shrink: 0; background: #080114;">
+                    <img id="brand-logo-preview" src="../assets/logo.jpeg" alt="Preview" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                  </div>
+                  <label for="brand-logo-file" class="btn-secondary" style="display: inline-flex; cursor: pointer; font-size: 0.82rem; padding: 0.45rem 0.85rem;">
+                    <i class="fa-solid fa-cloud-arrow-up me-1"></i> Subir Logo desde Archivo
+                  </label>
+                  <input type="file" id="brand-logo-file" accept="image/*" style="display: none;" onchange="handleLogoUpload(this, 'brand-logo-url', 'brand-logo-preview')">
+                </div>
+                <input type="text" id="brand-logo-url" class="form-control form-control-mono" placeholder="Ruta interna, URL https:// o Data URL Base64" style="font-size: 0.78rem;">
               </div>
             </div>
 
@@ -952,7 +961,7 @@
           </div>
 
           <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5;">
-            Crea un nuevo espacio autonomo para otra marca, aplicacion o cliente dentro de este mismo repositorio, con su propio catalogo de URLs y diseno visual independiente.
+            Crea un nuevo espacio autonomo para otra marca, aplicacion o cliente dentro de este mismo repositorio, con su propia ruta <code style="color: var(--cyan);">/links/nuevo-proyecto/</code>, su propio logo y diseno visual independiente.
           </p>
 
           <form id="new-project-form" onsubmit="event.preventDefault(); handleCreateProject();">
@@ -966,11 +975,26 @@
               <input type="text" id="new-proj-name" class="form-control" placeholder="ej. Mi Nueva Marca" required>
             </div>
 
-            <div class="form-group">
-              <label>Color Principal de Marca:</label>
-              <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <input type="color" id="new-proj-color" value="#00F0FF" style="width: 44px; height: 38px; border: none; border-radius: 8px; cursor: pointer;">
-                <span style="font-size: 0.85rem; color: var(--text-muted);">Selecciona la tonalidad corporativa</span>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Color Principal de Marca:</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <input type="color" id="new-proj-color" value="#00F0FF" style="width: 44px; height: 38px; border: none; border-radius: 8px; cursor: pointer;">
+                  <span style="font-size: 0.85rem; color: var(--text-muted);">Tonalidad corporativa</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Logo de la Nueva Empresa:</label>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                  <div style="width: 42px; height: 42px; border-radius: 50%; padding: 2px; border: 1px solid var(--border-cyan); flex-shrink: 0; background: #080114;">
+                    <img id="new-proj-logo-preview" src="../assets/logo.jpeg" alt="Preview" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                  </div>
+                  <label for="new-proj-logo-file" class="btn-secondary" style="display: inline-flex; cursor: pointer; font-size: 0.82rem; padding: 0.45rem 0.85rem;">
+                    <i class="fa-solid fa-cloud-arrow-up me-1"></i> Subir Logo
+                  </label>
+                  <input type="file" id="new-proj-logo-file" accept="image/*" style="display: none;" onchange="handleLogoUpload(this, 'new-proj-logo-url', 'new-proj-logo-preview')">
+                  <input type="hidden" id="new-proj-logo-url" value="../assets/logo.jpeg">
+                </div>
               </div>
             </div>
 
@@ -1440,13 +1464,13 @@
 
       filtered.forEach(link => {
         const tr = document.createElement('tr');
-        const shortUrl = `${baseUrl}/${link.slug}`;
+        const shortUrl = `${baseUrl}/${currentProjectId}/${link.slug}`;
         const isPub = link.is_public === true;
 
         tr.innerHTML = `
           <td>
-            <div style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--cyan);">/${escapeHtml(link.slug)}</div>
-            <a href="${shortUrl}" target="_blank" style="font-size: 0.75rem; color: var(--text-dim); text-decoration: none;" title="Abrir URL Corta">
+            <div style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--cyan);">/${escapeHtml(currentProjectId)}/${escapeHtml(link.slug)}</div>
+            <a href="${shortUrl}" target="_blank" style="font-size: 0.75rem; color: var(--text-dim); text-decoration: none;" title="Abrir URL Corta del Proyecto">
               ${shortUrl} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.65rem;"></i>
             </a>
           </td>
@@ -1631,7 +1655,50 @@
       document.getElementById('brand-color-cyan-text').value = cyan;
       document.getElementById('brand-color-bg').value = bg;
       document.getElementById('brand-color-bg-text').value = bg;
-      document.getElementById('brand-logo-url').value = theme.logo || '';
+      
+      const logoVal = theme.logo || '../assets/logo.jpeg';
+      document.getElementById('brand-logo-url').value = logoVal;
+      const preview = document.getElementById('brand-logo-preview');
+      if (preview) {
+        preview.src = logoVal.startsWith('http') || logoVal.startsWith('data:') || logoVal.startsWith('../')
+          ? logoVal
+          : '../' + logoVal;
+      }
+    }
+
+    function handleLogoUpload(input, targetInputId, previewImgId) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const maxDim = 260;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+            else { w = Math.round((w * maxDim) / h); h = maxDim; }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/png');
+
+          const targetInput = document.getElementById(targetInputId);
+          if (targetInput) targetInput.value = dataUrl;
+
+          const previewImg = document.getElementById(previewImgId);
+          if (previewImg) previewImg.src = dataUrl;
+
+          showToast('Logotipo optimizado y cargado con exito');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
     }
 
     function handleSaveBranding() {
@@ -1656,6 +1723,7 @@
       const id = document.getElementById('new-proj-id').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
       const name = document.getElementById('new-proj-name').value.trim();
       const color = document.getElementById('new-proj-color').value;
+      const logoUrl = document.getElementById('new-proj-logo-url').value || '../assets/logo.jpeg';
 
       if (!id || !name) {
         alert('Por favor ingresa un ID y un Nombre para el proyecto.');
@@ -1677,7 +1745,7 @@
           primary: color,
           cyan: "#38BDF8",
           border: color + "40",
-          logo: "../assets/logo.jpeg"
+          logo: logoUrl
         },
         links: []
       };
@@ -1700,18 +1768,19 @@
 
       (proj.links || []).forEach(l => {
         const opt = document.createElement('option');
-        opt.value = `${baseUrl}/${l.slug}`;
-        opt.textContent = `/${l.slug} - ${l.title}`;
+        opt.value = `${baseUrl}/${currentProjectId}/${l.slug}`;
+        opt.textContent = `/${currentProjectId}/${l.slug} - ${l.title}`;
         sel.appendChild(opt);
       });
 
       // Si no hay texto, poner la URL del portal del proyecto
       if (!document.getElementById('qr-custom-text').value) {
-        const portalUrl = currentProjectId === (globalConfig.default_project || 'nox')
-          ? `${baseUrl}/`
-          : `${baseUrl}/?p=${currentProjectId}`;
+        const portalUrl = `${baseUrl}/${currentProjectId}/`;
         document.getElementById('qr-custom-text').value = portalUrl;
       }
+
+      generatePreviewQr();
+    }
 
       generatePreviewQr();
     }

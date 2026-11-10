@@ -114,24 +114,25 @@
         'ig': 'https://www.instagram.com/noxslushnbeats/'
       };
 
-      // 2. Extraer slug de la ruta
-      const pathSegments = window.location.pathname.split('/').filter(Boolean);
-      // Si el repositorio es 'links', el slug suele ser el ultimo segmento
-      const slug = (pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : '').toLowerCase();
+      // 2. Extraer segmentos de ruta relativos a la aplicacion
+      const allSegments = window.location.pathname.split('/').filter(Boolean);
+      const repoIdx = allSegments.indexOf('links');
+      const relSegments = repoIdx !== -1 ? allSegments.slice(repoIdx + 1) : allSegments;
+      const cleanSegments = relSegments.filter(s => s !== 'index.html' && s !== '404.html').map(s => s.toLowerCase());
 
-      if (!slug || slug === 'links' || slug === '404.html') {
+      if (cleanSegments.length === 0) {
         window.location.replace('./');
         return;
       }
 
-      if (slug === 'admin') {
-        window.location.replace('admin/');
+      if (cleanSegments[0] === 'admin') {
+        window.location.replace('./admin/');
         return;
       }
 
-      // Si coincide en fallback instantaneo, redirigir sin esperar
-      if (FALLBACK_REDIRECTS[slug]) {
-        window.location.replace(FALLBACK_REDIRECTS[slug]);
+      // Si coincide con fallback basico
+      if (cleanSegments.length === 1 && FALLBACK_REDIRECTS[cleanSegments[0]]) {
+        window.location.replace(FALLBACK_REDIRECTS[cleanSegments[0]]);
         return;
       }
 
@@ -140,14 +141,31 @@
         const res = await fetch('./redirects.json?v=' + Date.now());
         if (res.ok) {
           const data = await res.json();
+          const projects = data.projects || {};
 
-          // Si el slug coincide con un proyecto registrado (ej. 'nox', 'xproyecto')
-          if (data.projects && data.projects[slug]) {
-            window.location.replace('./?p=' + slug);
+          // Caso A: Ruta con proyecto y sub-enlace: /links/<project>/<slug>
+          if (cleanSegments.length >= 2) {
+            const pId = cleanSegments[0];
+            const linkSlug = cleanSegments[1];
+            if (projects[pId]) {
+              const pLinks = projects[pId].links || [];
+              const matchLink = pLinks.find(l => l.slug.toLowerCase() === linkSlug && l.is_active !== false);
+              if (matchLink && matchLink.url) {
+                window.location.replace(matchLink.url);
+                return;
+              }
+            }
+          }
+
+          // Caso B: Ruta de proyecto directo: /links/<project>/
+          if (cleanSegments.length === 1 && projects[cleanSegments[0]]) {
+            window.location.replace('./' + cleanSegments[0] + '/');
             return;
           }
 
-          const match = (data.redirects || []).find(r => r.slug.toLowerCase() === slug && r.is_active !== false);
+          // Caso C: Ruta plana o slug directo: /links/<slug>
+          const singleSlug = cleanSegments[cleanSegments.length - 1];
+          const match = (data.redirects || []).find(r => r.slug.toLowerCase() === singleSlug && r.is_active !== false);
           if (match && match.url) {
             window.location.replace(match.url);
             return;
