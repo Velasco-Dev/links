@@ -255,6 +255,60 @@ def generate_project_portal(proj_id, proj_data, base_url):
         timer = setTimeout(() => {{ clickCount = 0; }}, 1500);
       }});
     }}
+
+    async function syncPortalLive() {{
+      try {{
+        const res = await fetch('../redirects.json?v=' + Date.now());
+        if (!res.ok) return;
+        const data = await res.json();
+        const proj = (data.projects && data.projects['{proj_id}']) || null;
+        if (!proj) return;
+
+        if (proj.name) {{
+          document.title = proj.name + ' | Canales Oficiales';
+          const h1 = document.querySelector('h1');
+          if (h1) h1.textContent = proj.name;
+        }}
+        if (proj.tagline) {{
+          const tag = document.querySelector('.tagline');
+          if (tag) tag.textContent = proj.tagline;
+        }}
+
+        const theme = proj.theme || {{}};
+        if (theme.logo) {{
+          let logoSrc = theme.logo;
+          if (!logoSrc.startsWith('http') && !logoSrc.startsWith('data:') && !logoSrc.startsWith('../')) {{
+            logoSrc = '../' + logoSrc.replace(/^\\.?\\/?/, '');
+          }}
+          const img = document.querySelector('#project-logo-trigger img');
+          if (img) img.src = logoSrc;
+        }}
+
+        const linksList = document.querySelector('.links-list');
+        const publicLinks = (proj.links || []).filter(l => l.is_public === true && l.is_active !== false);
+        if (linksList && publicLinks.length > 0) {{
+          linksList.innerHTML = publicLinks.map(l => {{
+            const isHigh = l.highlight ? ' highlight' : '';
+            const icon = l.icon || 'fa-solid fa-link';
+            const title = l.title || l.slug;
+            const desc = l.description ? '<div class=\"link-desc\">' + l.description + '</div>' : '';
+            return `
+              <a href=\"${{l.slug}}/\" class=\"link-btn${{isHigh}}\">
+                <div class=\"link-icon\"><i class=\"${{icon}}\"></i></div>
+                <div class=\"link-content\">
+                  <div class=\"link-title\">${{title}}</div>
+                  ${{desc}}
+                </div>
+                <div class=\"link-arrow\"><i class=\"fa-solid fa-chevron-right\"></i></div>
+              </a>
+            `;
+          }}).join('');
+        }}
+      }} catch (err) {{
+        // Fallback a HTML estatico si no hay conexion
+      }}
+    }}
+    syncPortalLive();
   </script>
 </body>
 </html>

@@ -115,6 +115,22 @@ G:\Ingenieria Informatica\Git Externo\links/
 
 ## 3. Bitacora de Evolucion y Versiones
 
+### Version 2.2.3 (10 de Noviembre de 2026) - Hidratacion Dinamica en Tiempo Real para Portales de Marca
+
+* **Objetivo:** Garantizar que cualquier actualizacion en enlaces, iconos (ej. Instagram), descripciones, logotipos o estilos realizada desde la consola web se refleje inmediatamente en el portal del proyecto sin requerir compilacion estatica manual.
+* **Problemas Abordados:**
+  1. Los portales (`/nox/`, `/smartechno/`) eran archivos HTML con enlaces estaticos pre-renderizados; al modificar un enlace o icono desde la app y enviar commit a `redirects.json`, el HTML servido por GitHub Pages continuaba mostrando el contenido estatico anterior.
+* **Acciones Implementadas:**
+  - Incorporacion del modulo `syncPortalLive()` en el generador de portales de [`manager.py`](../manager.py).
+  - Consulta asincrona hacia `../redirects.json?v=` + timestamp para anular caches del navegador y re-renderizar reactivamente iconos FontAwesome (`fa-brands fa-instagram`), logos Base64, titulos y botones.
+  - Sincronizacion de los commits remotos (`613b21d`) de la consola gerencial y recompilacion de portales fisicos.
+* **Verificacion:**
+  - Sintaxis probada con Node.js en todos los archivos.
+  - Canon Cero Emojis comprobado.
+  - Icono de Instagram de SmartechnO verificado en produccion como `fa-brands fa-instagram`.
+
+---
+
 ### Version 2.2.2 (10 de Noviembre de 2026) - Resolucion de URIs de Logos Base64 y Normalizacion de Rutas Relativas
 
 * **Objetivo:** Resolver fallo en peticiones HTTP al cargar o guardar logotipos en formato Data URL Base64 (`data:image/png;base64,...`) en la consola administrativa y homogeneizar el enrutamiento de imagenes.
