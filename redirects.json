@@ -53,12 +53,12 @@
           "slug": "wa",
           "url": "https://wa.me/?text=Hola%20NOX,%20quiero%20cotizar%20un%20evento%20o%20hacer%20un%20pedido",
           "title": "WhatsApp & Eventos",
-          "description": "Cotizaciones de barras moviles y atencion directa (Canal en configuracion)",
+          "description": "Cotizaciones de barras moviles y atencion directa",
           "icon": "fa-brands fa-whatsapp",
           "category": "comercial",
           "is_public": true,
           "highlight": false,
-          "is_active": false
+          "is_active": true
         },
         {
           "slug": "db",

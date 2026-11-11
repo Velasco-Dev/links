@@ -803,11 +803,15 @@
 
             <!-- Segregacion de Privacidad y Visibilidad -->
             <div class="form-group" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid var(--border);">
-              <label style="margin-bottom: 0.75rem; color: var(--text);">Privacidad & Visibilidad:</label>
+              <label style="margin-bottom: 0.75rem; color: var(--text);">Privacidad & Estado:</label>
               <div style="display: flex; flex-direction: column; gap: 0.65rem;">
                 <label class="checkbox-label">
                   <input type="checkbox" id="link-is-public" checked>
                   <span><strong>Enlace Publico:</strong> Visible en el portal de marca (Bio Link) para clientes.</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="link-is-active" checked>
+                  <span><strong>Enlace Habilitado (Activo):</strong> Desmarcalo para pausar temporalmente el enlace sin eliminarlo.</span>
                 </label>
                 <label class="checkbox-label">
                   <input type="checkbox" id="link-highlight">
@@ -815,7 +819,7 @@
                 </label>
               </div>
               <p style="font-size: 0.78rem; color: var(--text-dim); margin-top: 0.6rem;">
-                Si desmarcas "Enlace Publico", el enlace sera <strong>Privado / Gerencial</strong> (como tu base de datos o editor GAS) y JAMAS aparecera en la pagina publica.
+                Si desmarcas "Enlace Publico", el enlace sera <strong>Privado / Gerencial</strong> (accesible por su URL corta directa pero excluido del portal). Si desmarcas "Enlace Habilitado", quedara pausado.
               </p>
             </div>
 
@@ -1531,6 +1535,9 @@
             ${isPub 
               ? '<span class="badge badge-public"><i class="fa-solid fa-globe me-1"></i> Publico</span>' 
               : '<span class="badge badge-private"><i class="fa-solid fa-lock me-1"></i> Privado</span>'}
+            ${link.is_active === false 
+              ? '<span class="badge" style="background: rgba(255, 51, 102, 0.15); color: var(--red); border: 1px solid rgba(255, 51, 102, 0.3); margin-left: 0.3rem;"><i class="fa-solid fa-pause me-1"></i> Pausado</span>' 
+              : '<span class="badge" style="background: rgba(0, 255, 136, 0.12); color: var(--green); border: 1px solid rgba(0, 255, 136, 0.25); margin-left: 0.3rem;"><i class="fa-solid fa-check me-1"></i> Activo</span>'}
             ${link.highlight ? '<span class="badge" style="background: rgba(255,230,0,0.15); color: var(--gold); border: 1px solid rgba(255,230,0,0.3); margin-left: 0.3rem;">Destacado</span>' : ''}
           </td>
           <td style="text-align: right; white-space: nowrap;">
@@ -1562,6 +1569,7 @@
       const category = document.getElementById('link-category').value;
       const desc = document.getElementById('link-desc').value.trim();
       const isPublic = document.getElementById('link-is-public').checked;
+      const isActive = document.getElementById('link-is-active').checked;
       const highlight = document.getElementById('link-highlight').checked;
 
       if (!slug || !url || !title) {
@@ -1591,7 +1599,7 @@
         category: category,
         is_public: isPublic,
         highlight: highlight,
-        is_active: true
+        is_active: isActive
       };
 
       if (existingIdx !== -1) {
@@ -1626,6 +1634,7 @@
       document.getElementById('link-category').value = link.category || 'general';
       document.getElementById('link-desc').value = link.description || '';
       document.getElementById('link-is-public').checked = link.is_public !== false;
+      document.getElementById('link-is-active').checked = link.is_active !== false;
       document.getElementById('link-highlight').checked = Boolean(link.highlight);
 
       document.getElementById('form-link-title').textContent = `Editar Enlace: /${link.slug}`;
@@ -1641,6 +1650,7 @@
       document.getElementById('link-form').reset();
       document.getElementById('link-icon').value = 'fa-solid fa-link';
       document.getElementById('link-is-public').checked = true;
+      document.getElementById('link-is-active').checked = true;
       document.getElementById('link-highlight').checked = false;
       document.getElementById('form-link-title').textContent = 'Registrar Nuevo Enlace';
       document.getElementById('btn-save-link').innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i> Guardar Enlace en el Proyecto`;
