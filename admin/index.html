@@ -18,6 +18,9 @@
   <!-- QRCode.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+  <!-- jsPDF CDN para exportacion vectorial y PDF imprimible -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <style>
     :root {
       --bg: #080114;
@@ -223,13 +226,20 @@
     }
 
     .brand-title {
-      font-family: 'Orbitron', sans-serif;
+      display: inline-block;
+      font-family: 'Orbitron', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-weight: 900;
       font-size: 1.25rem;
       letter-spacing: 1.5px;
+      color: var(--text);
       background: linear-gradient(135deg, var(--text) 20%, var(--cyan) 70%, var(--primary) 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
     }
 
     .nav-actions {
@@ -1053,16 +1063,38 @@
             <div class="form-group">
               <label>Resolucion de Exportacion:</label>
               <select id="qr-resolution" class="form-control">
-                <option value="260">260 x 260 px (Web / Movil)</option>
-                <option value="512" selected>512 x 512 px (Stickers / Acrilicos)</option>
-                <option value="1024">1024 x 1024 px (Alta Definicion / Carteleria)</option>
+                <option value="512">512 x 512 px (Stickers / Acrilicos)</option>
+                <option value="1024" selected>1024 x 1024 px (Alta Definicion / Carteleria)</option>
+                <option value="2048">2048 x 2048 px (Gran Formato / Imprenta)</option>
               </select>
             </div>
           </div>
 
-          <button class="btn-submit" onclick="downloadQrImage()">
-            <i class="fa-solid fa-download me-1"></i> Descargar Codigo QR en PNG
-          </button>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Margen Perimetral (Quiet Zone):</label>
+              <select id="qr-margin-size" class="form-control" onchange="generatePreviewQr()">
+                <option value="0.05">5% (Margen Compacto)</option>
+                <option value="0.08" selected>8% (Recomendado para Escaneo)</option>
+                <option value="0.12">12% (Margen Amplio con Marco)</option>
+              </select>
+            </div>
+            <div class="form-group" style="display: flex; flex-direction: column; justify-content: flex-end;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.6rem; font-size: 0.9rem; color: var(--text);">
+                <input type="checkbox" id="qr-include-logo" checked onchange="generatePreviewQr()" style="width: 18px; height: 18px; accent-color: var(--primary);">
+                <span>Incrustar Logotipo en el Centro</span>
+              </label>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap;">
+            <button class="btn-submit" style="flex: 1; min-width: 170px;" onclick="downloadQrImage()">
+              <i class="fa-solid fa-file-image me-1"></i> Descargar Imagen PNG
+            </button>
+            <button class="btn-submit" style="flex: 1; min-width: 170px; background: linear-gradient(135deg, #00F0FF 0%, #00A3FF 100%); color: #080114;" onclick="downloadQrPdf()">
+              <i class="fa-solid fa-file-pdf me-1"></i> Descargar Documento PDF
+            </button>
+          </div>
         </div>
 
         <!-- Visor y Descarga -->
@@ -1074,8 +1106,10 @@
           </div>
 
           <div class="qr-preview-box">
-            <div id="qrcode-display"></div>
-            <div id="qr-preview-info" style="font-size: 0.82rem; color: var(--text-muted); margin-top: 1rem; font-family: 'JetBrains Mono', monospace;">
+            <div id="qrcode-display" style="display: flex; align-items: center; justify-content: center;">
+              <canvas id="qr-composite-canvas" width="280" height="280" style="max-width: 100%; height: auto; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);"></canvas>
+            </div>
+            <div id="qr-preview-info" style="font-size: 0.82rem; color: var(--text-muted); margin-top: 1rem; font-family: 'JetBrains Mono', monospace; word-break: break-all;">
               <!-- Informacion del slug -->
             </div>
           </div>
@@ -1771,7 +1805,7 @@
       showToast(`Nuevo proyecto '${name}' inicializado`);
     }
 
-    // 7. Estudio QR
+    // 7. Estudio QR Multi-Proyecto con Logotipo Central y Exportacion PDF
     function populateQrSelectors() {
       const sel = document.getElementById('qr-select-link');
       sel.innerHTML = '<option value="">-- Seleccionar Enlace del Proyecto --</option>';
@@ -1809,87 +1843,301 @@
       showToast(`Generando QR para /${slug}`);
     }
 
-    function generatePreviewQr() {
-      const text = document.getElementById('qr-custom-text').value.trim();
-      const container = document.getElementById('qrcode-display');
-      const info = document.getElementById('qr-preview-info');
-      container.innerHTML = '';
+    // Funcion asincrona para componer el QR con logotipo central y margen de seguridad
+    function renderQrComposite(targetCanvas, text, totalSize, marginRatio, includeLogo, style) {
+      return new Promise((resolve, reject) => {
+        try {
+          const proj = (globalConfig.projects && globalConfig.projects[currentProjectId]) || {};
+          const theme = proj.theme || {};
 
+          let fg = theme.primary || '#FF007F';
+          let bg = '#FFFFFF';
+
+          if (style === 'project_cyan') {
+            fg = theme.cyan || '#00F0FF';
+            bg = '#080114';
+          } else if (style === 'classic_bw') {
+            fg = '#000000';
+            bg = '#FFFFFF';
+          }
+
+          // Quiet zone / margen perimetral: garantizar minimo 5%
+          const effectiveMarginRatio = Math.max(0.05, marginRatio || 0.08);
+          const margin = Math.round(totalSize * effectiveMarginRatio);
+          const innerSize = Math.max(64, totalSize - (margin * 2));
+
+          const tempDiv = document.createElement('div');
+          tempDiv.style.position = 'absolute';
+          tempDiv.style.left = '-9999px';
+          tempDiv.style.top = '-9999px';
+          document.body.appendChild(tempDiv);
+
+          new QRCode(tempDiv, {
+            text: text,
+            width: innerSize,
+            height: innerSize,
+            colorDark: fg,
+            colorLight: bg,
+            correctLevel: QRCode.CorrectLevel.H
+          });
+
+          const composeOnCanvas = (qrSource) => {
+            targetCanvas.width = totalSize;
+            targetCanvas.height = totalSize;
+            const ctx = targetCanvas.getContext('2d');
+
+            // 1. Fondo completo
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, totalSize, totalSize);
+
+            // 2. Matriz QR centrada con margen perimetral
+            ctx.drawImage(qrSource, margin, margin, innerSize, innerSize);
+
+            // 3. Logotipo central
+            if (!includeLogo) {
+              tempDiv.remove();
+              resolve(targetCanvas);
+              return;
+            }
+
+            let logoSrc = (theme.logo) || '../assets/logo.jpeg';
+            if (!logoSrc.startsWith('http') && !logoSrc.startsWith('data:') && !logoSrc.startsWith('../')) {
+              logoSrc = '../' + logoSrc.replace(/^\.?\/?/, '');
+            }
+
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+
+            const drawLogoBadge = () => {
+              const badgeDiameter = Math.round(innerSize * 0.22);
+              const centerX = totalSize / 2;
+              const centerY = totalSize / 2;
+              const padding = Math.max(3, Math.round(badgeDiameter * 0.09));
+              const outerRadius = (badgeDiameter / 2) + padding;
+
+              ctx.save();
+              // Circulo de aislamiento para que ningun modulo QR interfiera
+              ctx.beginPath();
+              ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
+              ctx.fillStyle = bg;
+              ctx.fill();
+
+              // Anillo de contorno de marca
+              ctx.lineWidth = Math.max(2, Math.round(totalSize * 0.005));
+              ctx.strokeStyle = (style === 'project_cyan') ? (theme.cyan || '#00F0FF') : (theme.primary || '#FF007F');
+              ctx.stroke();
+
+              // Recorte circular del logotipo
+              ctx.beginPath();
+              ctx.arc(centerX, centerY, badgeDiameter / 2, 0, Math.PI * 2);
+              ctx.closePath();
+              ctx.clip();
+
+              // Dibujar imagen centrada
+              ctx.drawImage(
+                img,
+                centerX - (badgeDiameter / 2),
+                centerY - (badgeDiameter / 2),
+                badgeDiameter,
+                badgeDiameter
+              );
+              ctx.restore();
+
+              tempDiv.remove();
+              resolve(targetCanvas);
+            };
+
+            img.onload = drawLogoBadge;
+            img.onerror = () => {
+              // Si la imagen falla o es bloqueada, retornar QR limpio
+              tempDiv.remove();
+              resolve(targetCanvas);
+            };
+            img.src = logoSrc;
+          };
+
+          setTimeout(() => {
+            const qrCanvas = tempDiv.querySelector('canvas');
+            const qrImg = tempDiv.querySelector('img');
+
+            if (qrCanvas) {
+              composeOnCanvas(qrCanvas);
+            } else if (qrImg && qrImg.src) {
+              if (qrImg.complete) {
+                composeOnCanvas(qrImg);
+              } else {
+                qrImg.onload = () => composeOnCanvas(qrImg);
+                qrImg.onerror = () => {
+                  tempDiv.remove();
+                  reject(new Error('No se pudo renderizar la matriz QR'));
+                };
+              }
+            } else {
+              tempDiv.remove();
+              reject(new Error('Elemento QR no disponible'));
+            }
+          }, 120);
+
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
+
+    let qrPreviewDebounce = null;
+    function generatePreviewQr() {
+      clearTimeout(qrPreviewDebounce);
+      qrPreviewDebounce = setTimeout(async () => {
+        const text = document.getElementById('qr-custom-text').value.trim();
+        const canvas = document.getElementById('qr-composite-canvas');
+        const info = document.getElementById('qr-preview-info');
+
+        if (!text) {
+          if (info) info.textContent = 'Ingresa una direccion para generar el codigo QR.';
+          if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+          }
+          return;
+        }
+
+        const marginRatio = parseFloat(document.getElementById('qr-margin-size').value) || 0.08;
+        const includeLogo = document.getElementById('qr-include-logo').checked;
+        const style = document.getElementById('qr-style-palette').value;
+
+        try {
+          await renderQrComposite(canvas, text, 280, marginRatio, includeLogo, style);
+          if (info) info.textContent = text;
+        } catch (err) {
+          if (info) info.textContent = 'Error al previsualizar QR: ' + err.message;
+        }
+      }, 150);
+    }
+
+    async function downloadQrImage() {
+      const text = document.getElementById('qr-custom-text').value.trim();
       if (!text) {
-        info.textContent = 'Ingresa una direccion para generar el codigo QR.';
+        showToast('Ingresa una direccion URL valida');
         return;
       }
 
+      showToast('Generando imagen QR en alta definicion...');
+
+      const res = parseInt(document.getElementById('qr-resolution').value, 10) || 1024;
+      const marginRatio = parseFloat(document.getElementById('qr-margin-size').value) || 0.08;
+      const includeLogo = document.getElementById('qr-include-logo').checked;
       const style = document.getElementById('qr-style-palette').value;
-      const proj = (globalConfig.projects && globalConfig.projects[currentProjectId]) || {};
-      const theme = proj.theme || {};
 
-      let fg = theme.primary || '#FF007F';
-      let bg = '#FFFFFF';
+      try {
+        const tempCanvas = document.createElement('canvas');
+        await renderQrComposite(tempCanvas, text, res, marginRatio, includeLogo, style);
 
-      if (style === 'project_cyan') {
-        fg = theme.cyan || '#00F0FF';
-        bg = '#080114';
-      } else if (style === 'classic_bw') {
-        fg = '#000000';
-        bg = '#FFFFFF';
-      }
-
-      qrEngineInstance = new QRCode(container, {
-        text: text,
-        width: 220,
-        height: 220,
-        colorDark: fg,
-        colorLight: bg,
-        correctLevel: QRCode.CorrectLevel.H
-      });
-
-      info.textContent = text;
-    }
-
-    function downloadQrImage() {
-      const text = document.getElementById('qr-custom-text').value.trim();
-      if (!text) return;
-
-      const res = parseInt(document.getElementById('qr-resolution').value, 10) || 512;
-      const style = document.getElementById('qr-style-palette').value;
-      const proj = (globalConfig.projects && globalConfig.projects[currentProjectId]) || {};
-      const theme = proj.theme || {};
-
-      let fg = theme.primary || '#FF007F';
-      let bg = '#FFFFFF';
-
-      if (style === 'project_cyan') {
-        fg = theme.cyan || '#00F0FF';
-        bg = '#080114';
-      } else if (style === 'classic_bw') {
-        fg = '#000000';
-        bg = '#FFFFFF';
-      }
-
-      // Contenedor temporal de alta resolucion
-      const tempDiv = document.createElement('div');
-      new QRCode(tempDiv, {
-        text: text,
-        width: res,
-        height: res,
-        colorDark: fg,
-        colorLight: bg,
-        correctLevel: QRCode.CorrectLevel.H
-      });
-
-      setTimeout(() => {
-        const img = tempDiv.querySelector('img') || tempDiv.querySelector('canvas');
-        if (!img) return;
-
+        const slugCandidate = text.split('/').filter(Boolean).pop() || currentProjectId;
         const a = document.createElement('a');
-        a.href = img.src || img.toDataURL('image/png');
-        a.download = `qr_${currentProjectId}_${Date.now()}.png`;
+        a.href = tempCanvas.toDataURL('image/png');
+        a.download = `qr_${currentProjectId}_${slugCandidate}_${res}px.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         showToast('Codigo QR descargado con exito');
-      }, 200);
+      } catch (err) {
+        alert('Error al descargar imagen QR: ' + err.message);
+      }
+    }
+
+    async function downloadQrPdf() {
+      const text = document.getElementById('qr-custom-text').value.trim();
+      if (!text) {
+        showToast('Ingresa una direccion URL valida');
+        return;
+      }
+
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('La libreria de exportacion PDF no esta cargada aun. Verifica tu conexion de red.');
+        return;
+      }
+
+      showToast('Generando documento PDF de impresion...');
+
+      const marginRatio = parseFloat(document.getElementById('qr-margin-size').value) || 0.08;
+      const includeLogo = document.getElementById('qr-include-logo').checked;
+      const style = document.getElementById('qr-style-palette').value;
+      const proj = (globalConfig.projects && globalConfig.projects[currentProjectId]) || {};
+      const projName = proj.name || currentProjectId.toUpperCase();
+      const projTagline = (proj.tagline || 'Canales Oficiales y Enlaces Directos').replace(/[\r\n]+/g, ' ');
+
+      try {
+        const tempCanvas = document.createElement('canvas');
+        await renderQrComposite(tempCanvas, text, 1024, marginRatio, includeLogo, style);
+        const qrDataUrl = tempCanvas.toDataURL('image/png');
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+
+        // 1. Franja institucional superior
+        doc.setFillColor(8, 1, 20);
+        doc.rect(0, 0, pageWidth, 42, 'F');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(22);
+        doc.setTextColor(255, 255, 255);
+        doc.text(projName, pageWidth / 2, 21, { align: 'center' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9.5);
+        doc.setTextColor(0, 240, 255);
+        doc.text(projTagline.substring(0, 85), pageWidth / 2, 31, { align: 'center' });
+
+        // 2. Tarjeta contenedora del Codigo QR (ideal para cortar o exhibir)
+        const qrSizeMm = 125;
+        const qrX = (pageWidth - qrSizeMm) / 2;
+        const qrY = 62;
+        const cardPad = 10;
+
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(qrX - cardPad, qrY - cardPad, qrSizeMm + (cardPad * 2), qrSizeMm + (cardPad * 2) + 32, 6, 6, 'F');
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.6);
+        doc.roundedRect(qrX - cardPad, qrY - cardPad, qrSizeMm + (cardPad * 2), qrSizeMm + (cardPad * 2) + 32, 6, 6, 'S');
+
+        // Insertar imagen del QR con logotipo
+        doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSizeMm, qrSizeMm);
+
+        // Texto del enlace codificado
+        doc.setFont('courier', 'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor(15, 23, 42);
+        doc.text(text, pageWidth / 2, qrY + qrSizeMm + 12, { align: 'center' });
+
+        // Llamado a la accion para escaneo
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(217, 0, 108);
+        doc.text('ESCANEA CON LA CAMARA DE TU DISPOSITIVO', pageWidth / 2, qrY + qrSizeMm + 22, { align: 'center' });
+
+        // 3. Pie de pagina
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text('Generado oficialmente desde Consola Gerencial - Suite Multi-Proyecto', pageWidth / 2, pageHeight - 16, { align: 'center' });
+
+        const dateStr = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+        doc.setFontSize(8);
+        doc.text(`Identificador: ${currentProjectId} | Fecha: ${dateStr}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+
+        const slugCandidate = text.split('/').filter(Boolean).pop() || currentProjectId;
+        doc.save(`qr_${currentProjectId}_${slugCandidate}.pdf`);
+        showToast('Documento PDF generado y descargado');
+      } catch (err) {
+        alert('Error al generar PDF: ' + err.message);
+      }
     }
 
     // 8. Seguridad: Cambio de Clave Maestra

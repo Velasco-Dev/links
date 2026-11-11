@@ -203,9 +203,30 @@ def generate_project_portal(proj_id, proj_data, base_url):
     }}
     .brand-logo-frame img {{ width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #080114; }}
     h1 {{
-      font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; letter-spacing: 2px;
-      background: linear-gradient(135deg, #FFF 20%, var(--cyan) 70%, var(--primary) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;
+      display: inline-block;
+      max-width: 100%;
+      font-family: 'Orbitron', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #FFFFFF;
+      background: linear-gradient(135deg, #FFFFFF 20%, var(--cyan) 70%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      margin-bottom: 0.5rem;
+      word-break: break-word;
+    }}
+    @supports not ((-webkit-background-clip: text) or (background-clip: text)) {{
+      h1 {{
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+        background: none !important;
+      }}
     }}
     .tagline {{ font-size: 0.95rem; color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5; white-space: pre-line; }}
     .links-list {{ display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2.5rem; }}
@@ -269,7 +290,11 @@ def generate_project_portal(proj_id, proj_data, base_url):
         if (proj.name) {{
           document.title = proj.name + ' | Canales Oficiales';
           const h1 = document.querySelector('h1');
-          if (h1) h1.textContent = proj.name;
+          if (h1) {{
+            h1.textContent = proj.name;
+            h1.style.transform = 'translateZ(0.1px)';
+            requestAnimationFrame(() => {{ h1.style.transform = 'translateZ(0)'; }});
+          }}
         }}
         if (proj.tagline) {{
           const tag = document.querySelector('.tagline');
@@ -319,6 +344,16 @@ def generate_project_portal(proj_id, proj_data, base_url):
       }}
     }}
     syncPortalLive();
+
+    if (document.fonts && document.fonts.ready) {{
+      document.fonts.ready.then(() => {{
+        const h1 = document.querySelector('h1');
+        if (h1) {{
+          h1.style.transform = 'translateZ(0.1px)';
+          requestAnimationFrame(() => {{ h1.style.transform = 'translateZ(0)'; }});
+        }}
+      }});
+    }}
   </script>
 </body>
 </html>
@@ -374,7 +409,7 @@ def build_all_redirects():
     print(f"{Fore.GREEN}[OK] Se compilaron {count_projects} proyectos con sus sub-enlaces y {count_slugs} rutas de redireccion.{Style.RESET_ALL}\n")
 
 
-def generate_qr(text, filename, style="nox_neon"):
+def generate_qr(text, filename, style="nox_neon", project_id=None):
     if not QR_ENABLED:
         print(f"{Fore.RED}[ERROR] qrcode y pillow no estan instalados.{Style.RESET_ALL}")
         return None
@@ -386,25 +421,53 @@ def generate_qr(text, filename, style="nox_neon"):
     }
     fg, bg = palettes.get(style, ("#FF007F", "#FFFFFF"))
 
+    # border=4 asegura quiet-zone superior al 5% requerido
     qr = qrcode.QRCode(
         version=None,
         error_correction=qrcode.constants.ERROR_CORRECT_H,
         box_size=12,
-        border=3,
+        border=4,
     )
     qr.add_data(text)
     qr.make(fit=True)
 
     img = qr.make_image(fill_color=fg, back_color=bg).convert("RGBA")
 
-    # Incrustar logo si existe
-    if LOGO_PATH.exists():
+    # Identificar logotipo del proyecto o predeterminado
+    logo_img = None
+    if project_id:
+        data = load_redirects_data()
+        p = data.get("projects", {}).get(project_id, {})
+        p_logo = p.get("theme", {}).get("logo")
+        if p_logo:
+            if p_logo.startswith("data:image"):
+                import base64
+                from io import BytesIO
+                try:
+                    header, b64data = p_logo.split(",", 1)
+                    logo_bytes = base64.b64decode(b64data)
+                    logo_img = Image.open(BytesIO(logo_bytes)).convert("RGBA")
+                except Exception:
+                    pass
+            elif (BASE_DIR / p_logo.lstrip("/")).exists():
+                try:
+                    logo_img = Image.open(str(BASE_DIR / p_logo.lstrip("/"))).convert("RGBA")
+                except Exception:
+                    pass
+
+    if logo_img is None and LOGO_PATH.exists():
         try:
-            logo = Image.open(str(LOGO_PATH)).convert("RGBA")
+            logo_img = Image.open(str(LOGO_PATH)).convert("RGBA")
+        except Exception:
+            pass
+
+    # Incrustar logo con distintivo circular centrado
+    if logo_img is not None:
+        try:
             qw, qh = img.size
             logo_max = int(qw * 0.22)
-            logo.thumbnail((logo_max, logo_max), Image.Resampling.LANCZOS)
-            lw, lh = logo.size
+            logo_img.thumbnail((logo_max, logo_max), Image.Resampling.LANCZOS)
+            lw, lh = logo_img.size
 
             mask = Image.new("L", (lw, lh), 0)
             draw_m = ImageDraw.Draw(mask)
@@ -422,12 +485,17 @@ def generate_qr(text, filename, style="nox_neon"):
             pos_logo = ((qw - lw) // 2, (qh - lh) // 2)
 
             img.paste(badge, pos_badge, badge)
-            img.paste(logo, pos_logo, mask)
+            img.paste(logo_img, pos_logo, mask)
         except Exception:
             pass
 
     out_path = QRS_DIR / filename
-    img.save(str(out_path), "PNG")
+    if filename.lower().endswith(".pdf"):
+        rgb_img = Image.new("RGB", img.size, (255, 255, 255) if style != "nox_cyan" else (8, 1, 20))
+        rgb_img.paste(img, mask=img.split()[3])
+        rgb_img.save(str(out_path), "PDF", resolution=300.0)
+    else:
+        img.save(str(out_path), "PNG")
     return out_path
 
 
