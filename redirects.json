@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0.0",
   "base_url": "https://velasco-dev.github.io/links",
-  "updated_at": "2026-11-10T19:25:00.000Z",
+  "updated_at": "2026-11-20T02:51:48.789Z",
   "default_project": "nox",
   "security": {
     "auth_enabled": true,
@@ -107,6 +107,17 @@
           "is_public": true,
           "highlight": false,
           "is_active": true
+        },
+        {
+          "slug": "landing",
+          "url": "https://script.google.com/macros/s/AKfycby9DJUoydLtwDDXD-a5mv36KxWTfncLVpXQxgJMf-IR80-6YoGAB1-0HZ3r90ZXZxDL/exec",
+          "title": "Contacto & Ventas",
+          "description": "Somos una empresa Payanesa de soluciones tecnológicas, especializada en mantenimiento, venta al por mayor y al detal de equipos móviles, pcs, portátiles, cámaras de seguridad, etc. Con el mejor capital humano y  los mejores precios del mercado.",
+          "icon": "fa-solid fa-microchip",
+          "category": "comercial",
+          "is_public": true,
+          "highlight": true,
+          "is_active": true
         }
       ]
     }
@@ -137,10 +148,10 @@
       "project": "nox",
       "url": "https://wa.me/?text=Hola%20NOX,%20quiero%20cotizar%20un%20evento%20o%20hacer%20un%20pedido",
       "title": "WhatsApp & Eventos",
-      "description": "Cotizaciones de barras moviles y atencion directa (Canal en configuracion)",
+      "description": "Cotizaciones de barras moviles y atencion directa",
       "category": "comercial",
       "is_public": true,
-      "is_active": false
+      "is_active": true
     },
     {
       "slug": "db",
@@ -173,12 +184,12 @@
       "is_active": true
     },
     {
-      "slug": "smartechno",
+      "slug": "landing",
       "project": "smartechno",
-      "url": "https://www.instagram.com/smartechno7",
-      "title": "Instagram Oficial (Legacy)",
-      "description": "@smartechno7 - Novedades, fotos y promociones",
-      "category": "social",
+      "url": "https://script.google.com/macros/s/AKfycby9DJUoydLtwDDXD-a5mv36KxWTfncLVpXQxgJMf-IR80-6YoGAB1-0HZ3r90ZXZxDL/exec",
+      "title": "Contacto & Ventas",
+      "description": "Somos una empresa Payanesa de soluciones tecnológicas, especializada en mantenimiento, venta al por mayor y al detal de equipos móviles, pcs, portátiles, cámaras de seguridad, etc. Con el mejor capital humano y  los mejores precios del mercado.",
+      "category": "comercial",
       "is_public": true,
       "is_active": true
     }
