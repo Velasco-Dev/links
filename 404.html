@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Buscando Enlace... | NOX Links</title>
+  <title>Buscando Enlace... | Links</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
@@ -98,7 +98,7 @@
   <div class="box" id="content-box">
     <div class="spinner" id="loading-spinner"></div>
     <h1 id="status-title">Resolviendo Enlace...</h1>
-    <p id="status-desc">Buscando la direccion solicitada en el catalogo oficial de NOX.</p>
+    <p id="status-desc">Buscando la direccion solicitada en el catalogo oficial.</p>
     <a href="./" class="btn btn-primary" id="btn-portal" style="display: none;">
       <i class="fa-solid fa-house"></i> Ir al Portal de Enlaces
     </a>
@@ -106,7 +106,6 @@
 
   <script>
     (async function resolveRedirect() {
-      // 1. Extraer segmentos de ruta relativos a la aplicacion y base URL
       const allSegments = window.location.pathname.split('/').filter(Boolean);
       const repoIdx = allSegments.indexOf('links');
       const basePath = repoIdx !== -1 ? '/' + allSegments.slice(0, repoIdx + 1).join('/') + '/' : '/';
@@ -123,13 +122,42 @@
         return;
       }
 
-      // 2. Consultar archivo redirects.json dinamico con ruta absoluta
+      const projectHint = cleanSegments[0] || '';
+      const escapeHtml = (str) => (str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+      const projectName = (data, id) => {
+        const p = data && data.projects && data.projects[id];
+        if (p && p.name) return p.name;
+        if (id) return id.toUpperCase();
+        return 'Links';
+      };
+      const setLoadingProject = (name) => {
+        document.title = 'Buscando Enlace... | ' + name;
+        document.getElementById('status-desc').textContent = 'Buscando la direccion solicitada en el catalogo oficial de ' + name + '.';
+      };
+
+      let activeProjectId = '';
+      let activeProjectName = projectHint ? projectHint.toUpperCase() : 'Links';
+      setLoadingProject(activeProjectName);
+
       try {
         const fetchUrl = basePath + 'redirects.json?v=' + Date.now();
         const res = await fetch(fetchUrl);
         if (res.ok) {
           const data = await res.json();
           const projects = data.projects || {};
+          const defaultProject = data.default_project || Object.keys(projects)[0] || '';
+
+          if (cleanSegments.length >= 2 && projects[cleanSegments[0]]) {
+            activeProjectId = cleanSegments[0];
+          } else if (cleanSegments.length === 1 && projects[cleanSegments[0]]) {
+            activeProjectId = cleanSegments[0];
+          } else if (projects[projectHint]) {
+            activeProjectId = projectHint;
+          } else {
+            activeProjectId = defaultProject;
+          }
+          activeProjectName = projectName(data, activeProjectId);
+          setLoadingProject(activeProjectName);
 
           // Caso A: Ruta con proyecto y sub-enlace: /links/<project>/<slug>
           if (cleanSegments.length >= 2) {
@@ -163,7 +191,6 @@
         console.error('Error al resolver redirects.json:', e);
       }
 
-      // 3. Fallback instantaneo de emergencia si falla la red
       const FALLBACK_REDIRECTS = {
         'menu': 'https://script.google.com/macros/s/AKfycbwa5lWCVfdBqZiOtkZGWWTk9OI2wPe84NrlPlrufVk1LDNItsAV-qHym2zkEwd9ucKdmg/exec',
         'db': 'https://docs.google.com/spreadsheets/d/1vqtsoonbIRhnQ8bas060h27p7C-TKAIDX7cdHE8Ok5E/edit',
@@ -175,16 +202,15 @@
         return;
       }
 
-      // 4. Si no se encuentra el enlace
       const requestedSlug = cleanSegments.join('/');
       document.getElementById('loading-spinner').style.display = 'none';
       document.getElementById('status-title').textContent = 'Enlace No Encontrado';
-      document.getElementById('status-desc').innerHTML = 'El alias <span class="badge-slug">/' + requestedSlug + '</span> no existe o ha sido desactivado en la plataforma.';
+      document.getElementById('status-desc').innerHTML = 'El alias <span class="badge-slug">/' + escapeHtml(requestedSlug) + '</span> no existe o ha sido desactivado en el catalogo oficial de ' + escapeHtml(activeProjectName) + '.';
       const btnPortal = document.getElementById('btn-portal');
       if (btnPortal) {
-        if (cleanSegments.length >= 2) {
-          btnPortal.href = basePath + cleanSegments[0] + '/';
-          btnPortal.innerHTML = '<i class="fa-solid fa-house"></i> Ir al Portal de ' + cleanSegments[0].toUpperCase();
+        if (activeProjectId) {
+          btnPortal.href = basePath + activeProjectId + '/';
+          btnPortal.innerHTML = '<i class="fa-solid fa-house"></i> Ir al Portal de ' + escapeHtml(activeProjectName);
         } else {
           btnPortal.href = basePath;
           btnPortal.innerHTML = '<i class="fa-solid fa-house"></i> Ir al Portal Principal';
