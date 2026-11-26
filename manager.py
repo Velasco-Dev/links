@@ -66,24 +66,26 @@ def save_redirects_data(data):
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
-def generate_folder_redirect(slug, target_url, title, parent_folder=None):
+def generate_folder_redirect(slug, target_url, title, parent_folder=None, project_name="Links"):
     base = parent_folder if parent_folder is not None else BASE_DIR
-    # Evitar sobreescribir la carpeta administrativa si se llama 'admin' en la raiz
     if slug == "admin" and base == BASE_DIR:
         return BASE_DIR / "admin" / "index.html"
 
     folder = base / slug
     folder.mkdir(parents=True, exist_ok=True)
     index_file = folder / "index.html"
+    safe_title = (title or slug).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    safe_project = (project_name or "Links").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    safe_url = (target_url or "").replace('"', "%22")
 
     html_content = f"""<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url={target_url}">
-  <link rel="canonical" href="{target_url}">
-  <title>Redirigiendo a {title}...</title>
-  <script>window.location.replace("{target_url}");</script>
+  <meta http-equiv="refresh" content="0; url={safe_url}">
+  <link rel="canonical" href="{safe_url}">
+  <title>Redirigiendo... | {safe_project}</title>
+  <script>window.location.replace("{safe_url}");</script>
   <style>
     body {{ background-color: #080114; color: #F8FAFC; font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }}
     .card {{ text-align: center; padding: 2.5rem; background: rgba(18, 7, 43, 0.9); border: 1px solid rgba(255, 0, 127, 0.35); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); max-width: 480px; width: 90%; }}
@@ -97,9 +99,9 @@ def generate_folder_redirect(slug, target_url, title, parent_folder=None):
 <body>
   <div class="card">
     <div class="spinner"></div>
-    <h2>Redirigiendo a {title}</h2>
-    <p>Abriendo enlace oficial...</p>
-    <a href="{target_url}">Haz clic aqui si no eres redirigido</a>
+    <h2>Redirigiendo...</h2>
+    <p>Abriendo {safe_title} en el catalogo oficial de {safe_project}.</p>
+    <a href="{safe_url}">Haz clic aqui si no eres redirigido</a>
   </div>
 </body>
 </html>
@@ -382,12 +384,13 @@ def build_all_redirects():
 
             # Compilar sub-rutas especificas del proyecto (ej. /nox/menu/, /nox/ig/)
             p_folder = BASE_DIR / p_id
+            p_name = p_data.get("name", p_id.upper())
             for l in p_data.get("links", []):
                 l_slug = l.get("slug")
                 l_url = l.get("url")
                 l_title = l.get("title", l_slug)
                 if l_slug and l_url:
-                    generate_folder_redirect(l_slug, l_url, l_title, parent_folder=p_folder)
+                    generate_folder_redirect(l_slug, l_url, l_title, parent_folder=p_folder, project_name=p_name)
                     is_pub = "Publico" if l.get("is_public", True) else "Privado"
                     print(f"      -> /{p_id}/{l_slug}/index.html [{is_pub}] -> {l_url}")
                     count_slugs += 1
@@ -399,8 +402,10 @@ def build_all_redirects():
         slug = item.get("slug")
         url = item.get("url")
         title = item.get("title", slug)
+        project_id = item.get("project")
+        project_name = projects.get(project_id, {}).get("name", (project_id or "Links").upper())
         if slug and url and slug not in seen_root:
-            generate_folder_redirect(slug, url, title)
+            generate_folder_redirect(slug, url, title, project_name=project_name)
             is_pub = "Publico" if item.get("is_public", True) else "Privado"
             print(f"  [+] Redireccion raiz: /{slug}/index.html [{is_pub}] -> {url}")
             seen_root.add(slug)
@@ -584,8 +589,9 @@ def add_link(slug, url, title=None, category="general", project="nox", is_public
 
     save_redirects_data(data)
     p_folder = BASE_DIR / project
-    generate_folder_redirect(slug, url, title, parent_folder=p_folder)
-    generate_folder_redirect(slug, url, title)
+    project_name = projects.get(project, {}).get("name", project.upper())
+    generate_folder_redirect(slug, url, title, parent_folder=p_folder, project_name=project_name)
+    generate_folder_redirect(slug, url, title, project_name=project_name)
     pub_tag = "PUBLICO" if is_public else "PRIVADO/GERENCIAL"
     print(f"{Fore.GREEN}[OK] Enlace '{slug}' registrado en proyecto '{project}' [{pub_tag}].{Style.RESET_ALL}")
     print(f"     URL Oficial: {data.get('base_url')}/{project}/{slug}")
