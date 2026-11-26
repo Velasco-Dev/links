@@ -82,10 +82,15 @@ def generate_folder_redirect(slug, target_url, title, parent_folder=None, projec
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url={safe_url}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="canonical" href="{safe_url}">
   <title>Redirigiendo... | {safe_project}</title>
-  <script>window.location.replace("{safe_url}");</script>
+  <noscript><meta http-equiv="refresh" content="1; url={safe_url}"></noscript>
+  <script>
+    setTimeout(function () {{
+      window.location.replace("{safe_url}");
+    }}, 700);
+  </script>
   <style>
     body {{ background-color: #080114; color: #F8FAFC; font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }}
     .card {{ text-align: center; padding: 2.5rem; background: rgba(18, 7, 43, 0.9); border: 1px solid rgba(255, 0, 127, 0.35); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); max-width: 480px; width: 90%; }}
@@ -395,23 +400,7 @@ def build_all_redirects():
                     print(f"      -> /{p_id}/{l_slug}/index.html [{is_pub}] -> {l_url}")
                     count_slugs += 1
     
-    # 2. Compilar enlaces en la raiz para compatibilidad retroactiva directa (ej. /menu/)
-    seen_root = set(projects.keys())
-    seen_root.add("admin")
-    for item in redirects:
-        slug = item.get("slug")
-        url = item.get("url")
-        title = item.get("title", slug)
-        project_id = item.get("project")
-        project_name = projects.get(project_id, {}).get("name", (project_id or "Links").upper())
-        if slug and url and slug not in seen_root:
-            generate_folder_redirect(slug, url, title, project_name=project_name)
-            is_pub = "Publico" if item.get("is_public", True) else "Privado"
-            print(f"  [+] Redireccion raiz: /{slug}/index.html [{is_pub}] -> {url}")
-            seen_root.add(slug)
-            count_slugs += 1
-
-    print(f"{Fore.GREEN}[OK] Se compilaron {count_projects} proyectos con sus sub-enlaces y {count_slugs} rutas de redireccion.{Style.RESET_ALL}\n")
+    print(f"{Fore.GREEN}[OK] Se compilaron {count_projects} proyectos y {count_slugs} rutas de redireccion por proyecto.{Style.RESET_ALL}\n")
 
 
 def generate_qr(text, filename, style="nox_neon", project_id=None):
@@ -591,7 +580,6 @@ def add_link(slug, url, title=None, category="general", project="nox", is_public
     p_folder = BASE_DIR / project
     project_name = projects.get(project, {}).get("name", project.upper())
     generate_folder_redirect(slug, url, title, parent_folder=p_folder, project_name=project_name)
-    generate_folder_redirect(slug, url, title, project_name=project_name)
     pub_tag = "PUBLICO" if is_public else "PRIVADO/GERENCIAL"
     print(f"{Fore.GREEN}[OK] Enlace '{slug}' registrado en proyecto '{project}' [{pub_tag}].{Style.RESET_ALL}")
     print(f"     URL Oficial: {data.get('base_url')}/{project}/{slug}")

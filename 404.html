@@ -204,17 +204,7 @@
         console.error('Error al resolver redirects.json:', e);
       }
 
-      const FALLBACK_REDIRECTS = {
-        'menu': 'https://script.google.com/macros/s/AKfycbwa5lWCVfdBqZiOtkZGWWTk9OI2wPe84NrlPlrufVk1LDNItsAV-qHym2zkEwd9ucKdmg/exec',
-        'db': 'https://docs.google.com/spreadsheets/d/1vqtsoonbIRhnQ8bas060h27p7C-TKAIDX7cdHE8Ok5E/edit',
-        'editor': 'https://script.google.com/home/projects/19Jj1QYs18vnHqS9FqM41cnGebJPlyRewE035hxI8VMK1J4skK1ETXioR/edit'
-      };
-
-      if (cleanSegments.length === 1 && FALLBACK_REDIRECTS[cleanSegments[0]]) {
-        setRedirecting(activeProjectName);
-        window.location.replace(FALLBACK_REDIRECTS[cleanSegments[0]]);
-        return;
-      }
+     
 
       const requestedSlug = cleanSegments.join('/');
       document.getElementById('loading-spinner').style.display = 'none';
