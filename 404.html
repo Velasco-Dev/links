@@ -132,7 +132,15 @@
       };
       const setLoadingProject = (name) => {
         document.title = 'Buscando Enlace... | ' + name;
+        document.getElementById('status-title').textContent = 'Resolviendo Enlace...';
         document.getElementById('status-desc').textContent = 'Buscando la direccion solicitada en el catalogo oficial de ' + name + '.';
+        document.getElementById('loading-spinner').style.display = 'block';
+      };
+      const setRedirecting = (name) => {
+        document.title = 'Redirigiendo... | ' + name;
+        document.getElementById('status-title').textContent = 'Redirigiendo...';
+        document.getElementById('status-desc').textContent = 'Encontramos tu enlace en el catalogo oficial de ' + name + '. Te llevamos a tu destino.';
+        document.getElementById('loading-spinner').style.display = 'block';
       };
 
       let activeProjectId = '';
@@ -167,6 +175,7 @@
               const pLinks = projects[pId].links || [];
               const matchLink = pLinks.find(l => l.slug && l.slug.toLowerCase() === linkSlug && l.is_active !== false);
               if (matchLink && matchLink.url) {
+                setRedirecting(activeProjectName);
                 window.location.replace(matchLink.url);
                 return;
               }
@@ -175,6 +184,7 @@
 
           // Caso B: Ruta de proyecto directo: /links/<project>/
           if (cleanSegments.length === 1 && projects[cleanSegments[0]]) {
+            setRedirecting(activeProjectName);
             window.location.replace(basePath + cleanSegments[0] + '/');
             return;
           }
@@ -183,6 +193,9 @@
           const singleSlug = cleanSegments[cleanSegments.length - 1];
           const match = (data.redirects || []).find(r => r.slug && r.slug.toLowerCase() === singleSlug && r.is_active !== false);
           if (match && match.url) {
+            const matchProject = match.project && projects[match.project] ? match.project : activeProjectId;
+            const matchProjectName = projectName(data, matchProject);
+            setRedirecting(matchProjectName);
             window.location.replace(match.url);
             return;
           }
@@ -198,6 +211,7 @@
       };
 
       if (cleanSegments.length === 1 && FALLBACK_REDIRECTS[cleanSegments[0]]) {
+        setRedirecting(activeProjectName);
         window.location.replace(FALLBACK_REDIRECTS[cleanSegments[0]]);
         return;
       }
