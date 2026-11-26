@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0.0",
   "base_url": "https://velasco-dev.github.io/links",
-  "updated_at": "2026-11-26T05:41:33.700Z",
+  "updated_at": "2026-11-26T06:32:26.508Z",
   "default_project": "nox",
   "security": {
     "auth_enabled": true,
@@ -129,6 +129,17 @@
           "is_public": true,
           "highlight": false,
           "is_active": true
+        },
+        {
+          "slug": "fa",
+          "url": "https://www.facebook.com/smartechno7/",
+          "title": "Facebook Oficial",
+          "description": "@smartechno7 - Novedades, fotos y promociones",
+          "icon": "fa-brands fa-instagram",
+          "category": "social",
+          "is_public": true,
+          "highlight": false,
+          "is_active": true
         }
       ]
     }
@@ -211,6 +222,16 @@
       "title": "WhatsApp Oficial",
       "description": "¿Necesitas soporte técnico o cotizar equipos? Escríbenos directo por WhatsApp y te atendemos al instante.",
       "category": "comercial",
+      "is_public": true,
+      "is_active": true
+    },
+    {
+      "slug": "fa",
+      "project": "smartechno",
+      "url": "https://www.facebook.com/smartechno7/",
+      "title": "Facebook Oficial",
+      "description": "@smartechno7 - Novedades, fotos y promociones",
+      "category": "social",
       "is_public": true,
       "is_active": true
     }
