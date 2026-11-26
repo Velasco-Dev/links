@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0.0",
   "base_url": "https://velasco-dev.github.io/links",
-  "updated_at": "2026-11-20T02:51:48.789Z",
+  "updated_at": "2026-11-26T05:41:33.700Z",
   "default_project": "nox",
   "security": {
     "auth_enabled": true,
@@ -118,6 +118,17 @@
           "is_public": true,
           "highlight": true,
           "is_active": true
+        },
+        {
+          "slug": "wa",
+          "url": "https://wa.me/573027573824?text=Hola Smartechno, necesito soporte técnico o cotizar equipos",
+          "title": "WhatsApp Oficial",
+          "description": "¿Necesitas soporte técnico o cotizar equipos? Escríbenos directo por WhatsApp y te atendemos al instante.",
+          "icon": "fa-brands fa-whatsapp",
+          "category": "comercial",
+          "is_public": true,
+          "highlight": false,
+          "is_active": true
         }
       ]
     }
@@ -189,6 +200,16 @@
       "url": "https://script.google.com/macros/s/AKfycby9DJUoydLtwDDXD-a5mv36KxWTfncLVpXQxgJMf-IR80-6YoGAB1-0HZ3r90ZXZxDL/exec",
       "title": "Contacto & Ventas",
       "description": "Somos una empresa Payanesa de soluciones tecnológicas, especializada en mantenimiento, venta al por mayor y al detal de equipos móviles, pcs, portátiles, cámaras de seguridad, etc. Con el mejor capital humano y  los mejores precios del mercado.",
+      "category": "comercial",
+      "is_public": true,
+      "is_active": true
+    },
+    {
+      "slug": "wa",
+      "project": "smartechno",
+      "url": "https://wa.me/573027573824?text=Hola Smartechno, necesito soporte técnico o cotizar equipos",
+      "title": "WhatsApp Oficial",
+      "description": "¿Necesitas soporte técnico o cotizar equipos? Escríbenos directo por WhatsApp y te atendemos al instante.",
       "category": "comercial",
       "is_public": true,
       "is_active": true
